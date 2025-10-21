@@ -1,0 +1,1422 @@
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 #include <p18f4520.inc>
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Mar 17 2019
+                      00005 ;  MPASM PIC18F4520 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2019 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      01489         LIST
+                      00002 #include "toolbelt.asm"
+                      00001 ; ===================== toolbelt.inc (MPASM) =====================
+                      00002 
+                      00003 ; --- tiny helpers ---
+                      00004 MOVLF    MACRO val, dest       ; dest = literal
+                      00005         MOVLW   val
+                      00006         MOVWF   dest
+                      00007         ENDM
+                      00008 SETBIT   MACRO f,b             ; f.b = 1
+                      00009         BSF     f,b
+                      00010         ENDM
+                      00011 CLRBIT   MACRO f,b             ; f.b = 0
+                      00012         BCF     f,b
+                      00013         ENDM
+                      00014 XCHG     MACRO a,b             ; swap a<->b (uses WREG)
+                      00015         MOVF    a,W
+                      00016         XORWF   b,F
+                      00017         XORWF   a,F
+                      00018         XORWF   b,F
+                      00019         ENDM
+                      00020 
+                      00021 ; --- 16-bit add/sub/cmp (dest += src, etc.) ---
+                      00022 ADD16    MACRO dL,dH,sL,sH
+                      00023         MOVF    sL,W
+                      00024         ADDWF   dL,F
+                      00025         MOVF    sH,W
+                      00026         ADDWFC  dH,F
+                      00027         ENDM
+                      00028 SUB16    MACRO dL,dH,sL,sH
+                      00029         MOVF    sL,W
+                      00030         SUBWF   dL,F
+                      00031         MOVF    sH,W
+                      00032         SUBWFB  dH,F
+                      00033         ENDM
+                      00034 CMP16    MACRO aL,aH,bL,bH     ; sets C/Z from (a-b) without changing a
+                      00035         LOCAL   _c1,_c2
+                      00036         MOVF    bL,W
+                      00037         SUBWF   aL,W           ; W=(aL-bL)
+                      00038         MOVWF   0x7F           ; temp in access if allowed; else change
+                      00039 _c1     MOVF    bH,W
+                      00040         SUBWFB  aH,W
+                      00041         ENDM
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00042 INC16    MACRO xL,xH
+                      00043         INCF    xL,F
+                      00044         BTFSC   STATUS,0
+                      00045         INCF    xH,F
+                      00046         ENDM
+                      00047 DEC16    MACRO xL,xH
+                      00048         MOVLW   1
+                      00049         SUBWF   xL,F
+                      00050         BTFSS   STATUS,0
+                      00051         DECF    xH,F
+                      00052         ENDM
+                      00053 
+                      00054 ; --- logical & arithmetic shifts (16-bit) ---
+                      00055 LSL16    MACRO xL,xH
+                      00056         BCF     STATUS,0
+                      00057         RLCF    xL,F
+                      00058         RLCF    xH,F
+                      00059         ENDM
+                      00060 LSR16    MACRO xL,xH
+                      00061         BCF     STATUS,0
+                      00062         RRCF    xH,F
+                      00063         RRCF    xL,F
+                      00064         ENDM
+                      00065 ASR16    MACRO xL,xH            ; arithmetic >>1
+                      00066         BTFSC   xH,7
+                      00067         BSF     STATUS,0
+                      00068         BTFSS   xH,7
+                      00069         BCF     STATUS,0
+                      00070         RRCF    xH,F
+                      00071         RRCF    xL,F
+                      00072         ENDM
+                      00073 
+                      00074 ; --- 16/8 unsigned division: (dH:dL)/div -> quoH:quoL, rem ---
+                      00075 DIV16U8  MACRO dH,dL, div, quoH,quoL, rem, cnt
+                      00076         LOCAL   _h,_hge,_hnx,_l,_lge,_lnx
+                      00077         CLRF    quoH
+                      00078         CLRF    rem
+                      00079         MOVLW   8
+                      00080         MOVWF   cnt
+                      00081 _h      RLCF    dH,F
+                      00082         RLCF    rem,F
+                      00083         MOVF    div,W
+                      00084         SUBWF   rem,W
+                      00085         BTFSC   STATUS,0
+                      00086         GOTO    _hge
+                      00087         BCF     STATUS,0
+                      00088         RLCF    quoH,F
+                      00089         GOTO    _hnx
+                      00090 _hge    MOVF    div,W
+                      00091         SUBWF   rem,F
+                      00092         BSF     STATUS,0
+                      00093         RLCF    quoH,F
+                      00094 _hnx    DECFSZ  cnt,F
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00095         GOTO    _h
+                      00096         CLRF    quoL
+                      00097         MOVLW   8
+                      00098         MOVWF   cnt
+                      00099 _l      RLCF    dL,F
+                      00100         RLCF    rem,F
+                      00101         MOVF    div,W
+                      00102         SUBWF   rem,W
+                      00103         BTFSC   STATUS,0
+                      00104         GOTO    _lge
+                      00105         BCF     STATUS,0
+                      00106         RLCF    quoL,F
+                      00107         GOTO    _lnx
+                      00108 _lge    MOVF    div,W
+                      00109         SUBWF   rem,F
+                      00110         BSF     STATUS,0
+                      00111         RLCF    quoL,F
+                      00112 _lnx    DECFSZ  cnt,F
+                      00113         GOTO    _l
+                      00114         ENDM
+                      00115 
+                      00116 ; --- 8x8 -> 16 multiply accumulate: acc += a*b (acc = aH:aL) ---
+                      00117 MAC16_8x8 MACRO a,b, accL,accH
+                      00118         MOVF    a,W
+                      00119         MULWF   b              ; PRODH:PRODL = a*b
+                      00120         MOVF    PRODL,W
+                      00121         ADDWF   accL,F
+                      00122         MOVF    PRODH,W
+                      00123         ADDWFC  accH,F
+                      00124         ENDM
+                      00125         
+                      00126 ; FOR8_REG i, limReg, bodyLbl
+                      00127 ; for (i=0; i<[*limReg]; i++) bodyLbl();
+                      00128 FOR8_REG MACRO i, limReg, bodyLbl
+                      00129     LOCAL _loop, _end
+                      00130     CLRF    i
+                      00131 _loop
+                      00132     MOVF    i, W
+                      00133     SUBWF   limReg, w
+                      00134     BTFSC   STATUS, Z  ; if equal ? stop
+                      00135     GOTO    _end
+                      00136     BTFSS   STATUS, C  ; if i > limit ? stop
+                      00137     GOTO    _end
+                      00138 
+                      00139     ; <<< Your code here >>>
+                      00140     ; you can either write instructions directly here,
+                      00141     ; or define a subroutine and replace the CALL below.
+                      00142 
+                      00143     CALL    bodyLbl    ; body() executes each loop
+                      00144 
+                      00145     INCF    i, F       ; i++
+                      00146     GOTO    _loop
+                      00147 _end
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Warning[205]: Found directive in column 1. (ENDM)
+                      00148 ENDM
+                      00149 
+                      00150 
+                      00151 ; --- simple 8-bit for(i=0;i<limit;i++) { body() } ---
+                      00152 FOR8 MACRO i, limit, bodyLbl
+                      00153     LOCAL _loop, _end
+                      00154     CLRF    i          ; i = 0
+                      00155 _loop
+                      00156     MOVF    i, W
+                      00157     SUBLW   limit      ; compare i with limit
+                      00158     BTFSC   STATUS, Z  ; if equal ? stop
+                      00159     GOTO    _end
+                      00160     BTFSS   STATUS, C  ; if i > limit ? stop
+                      00161     GOTO    _end
+                      00162 
+                      00163     ; <<< Your code here >>>
+                      00164     ; you can either write instructions directly here,
+                      00165     ; or define a subroutine and replace the CALL below.
+                      00166 
+                      00167     CALL    bodyLbl    ; body() executes each loop
+                      00168 
+                      00169     INCF    i, F       ; i++
+                      00170     GOTO    _loop
+                      00171 _end
+Warning[205]: Found directive in column 1. (ENDM)
+                      00172 ENDM
+                      00173 
+                      00174 ; ============================================================
+                      00175 ; FOR2D_REG i, j, limI, limJ, bodyLbl
+                      00176 ; for (i=0; i<[*limI]; i++)
+                      00177 ;   for (j=0; j<[*limJ]; j++)
+                      00178 ;       bodyLbl();
+                      00179 ; Notes:
+                      00180 ;  - limI, limJ are register addresses holding the limits.
+                      00181 ;  - Compares via (i - limit) so:
+                      00182 ;      Z=1 ? i == limit  ? stop
+                      00183 ;      C=1 ? i >  limit  ? stop (no-borrow means i >= limit)
+                      00184 ; ============================================================
+                      00185 FOR2D_REG MACRO i, j, limI, limJ, bodyLbl
+                      00186     LOCAL _outer, _inner, _end_inner, _end_outer
+                      00187 
+                      00188     CLRF    i                 ; i = 0
+                      00189 _outer
+                      00190     MOVF    limI, W
+                      00191     SUBWF   i, W              ; W = i - limI
+                      00192     BTFSC   STATUS, Z         ; i == limI ?
+                      00193     GOTO    _end_outer
+                      00194     BTFSC   STATUS, C         ; i > limI ?
+                      00195     GOTO    _end_outer
+                      00196 
+                      00197     CLRF    j                 ; j = 0
+                      00198 _inner
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00199     MOVF    limJ, W
+                      00200     SUBWF   j, W              ; W = j - limJ
+                      00201     BTFSC   STATUS, Z         ; j == limJ ?
+                      00202     GOTO    _end_inner
+                      00203     BTFSC   STATUS, C         ; j > limJ ?
+                      00204     GOTO    _end_inner
+                      00205 
+                      00206     ; ---------- your operation here ----------
+                      00207     CALL    bodyLbl
+                      00208     ; -----------------------------------------
+                      00209 
+                      00210     INCF    j, F              ; j++
+                      00211     GOTO    _inner
+                      00212 
+                      00213 _end_inner
+                      00214     INCF    i, F              ; i++
+                      00215     GOTO    _outer
+                      00216 
+                      00217 _end_outer
+Warning[205]: Found directive in column 1. (ENDM)
+                      00218 ENDM
+                      00219 
+                      00220 
+                      00221     
+                      00222 ; --- memset: fill count bytes at FSRx with value in W ---
+                      00223 MEMSET   MACRO fsrL,fsrH, count
+                      00224         LOCAL   _ms1,_ms2
+                      00225 _ms1    MOVF    count,W
+                      00226         BZ      _ms2
+                      00227         MOVWF   POSTINC0       ; assumes FSR0 targeted; change if needed
+                      00228         DECF    count,F
+                      00229         GOTO    _ms1
+                      00230 _ms2    ENDM
+                      00231 
+                      00232 ; --- memcpy: copy count bytes FSR0 -> FSR1 ---
+                      00233 MEMCPY   MACRO count
+                      00234         LOCAL   _cp1,_cp2
+                      00235 _cp1    MOVF    count,W
+                      00236         BZ      _cp2
+                      00237         MOVF    POSTINC0,W
+                      00238         MOVWF   POSTINC1
+                      00239         DECF    count,F
+                      00240         GOTO    _cp1
+                      00241 _cp2    ENDM
+                      00242 
+                      00243 ; --- nibble helpers ---
+                      00244 GET_HINIB MACRO src,dst
+                      00245         MOVF    src,W
+                      00246         MOVWF   dst
+                      00247         SWAPF   dst,F
+                      00248         ANDLW   0x0F
+                      00249         MOVWF   dst
+                      00250         ENDM
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00251 GET_LONIB MACRO src,dst
+                      00252         MOVF    src,W
+                      00253         ANDLW   0x0F
+                      00254         MOVWF   dst
+                      00255         ENDM
+                      00256 PACK_NIB  MACRO hi,lo,dst
+                      00257         MOVF    hi,W
+                      00258         ANDLW   0x0F
+                      00259         MOVWF   dst
+                      00260         SWAPF   dst,F
+                      00261         MOVF    lo,W
+                      00262         ANDLW   0x0F
+                      00263         IORWF   dst,F
+                      00264         ENDM
+                      00265 
+                      00266 ; --- wait until bit set/clear ---
+                      00267 WAIT_SET MACRO f,b
+                      00268         LOCAL _ws
+                      00269 _ws     BTFSS   f,b
+                      00270         GOTO    _ws
+                      00271         ENDM
+                      00272 WAIT_CLR MACRO f,b
+                      00273         LOCAL _wc
+                      00274 _wc     BTFSC   f,b
+                      00275         GOTO    _wc
+                      00276         ENDM
+                      00277 
+                      00278 ; --- quick const delay (nested 8-bit loops) ---
+                      00279 DELAY_LL MACRO c1,c2        ; ~ c1*c2*3 cycles + overhead
+                      00280         LOCAL _d1,_d2
+                      00281         MOVLW   c1
+                      00282         MOVWF   0x6E
+                      00283 _d1     MOVLW   c2
+                      00284         MOVWF   0x6F
+                      00285 _d2     DECFSZ  0x6F,F
+                      00286         GOTO    _d2
+                      00287         DECFSZ  0x6E,F
+                      00288         GOTO    _d1
+                      00289         ENDM
+                      00290         
+                      00291 ; 16-bit � 8-bit (unsigned) long-division style
+                      00292 ; (dH:dL) / divsor  ?  quoH:quoL, remainder in rem
+                      00293 ; cnt is a scratch counter byte you provide.
+                      00294 DIV16U8_LONG MACRO dH,dL,divsor, quoH,quoL, rem, cnt
+                      00295     LOCAL _loop, _skip_sub, _next
+                      00296     CLRF    quoH
+                      00297     CLRF    quoL
+                      00298     CLRF    rem
+                      00299     MOVLW   9
+                      00300     MOVWF   cnt
+                      00301 _loop
+                      00302     RLCF    dL, F          ; shift dividend left
+                      00303     RLCF    dH, F
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00304     RLCF    rem, F         ; bring top bit into remainder
+                      00305 
+                      00306     MOVF    rem, W
+                      00307     SUBWF   divsor, W      ; test (divsor - rem) in W
+                      00308     BTFSS   STATUS, C      ; if rem < divsor ? skip subtract
+                      00309     GOTO    _skip_sub
+                      00310 
+                      00311     ; rem >= divsor ? subtract and set quotient bit=1
+                      00312     MOVF    divsor, W
+                      00313     SUBWF   rem, F
+                      00314     RLCF    quoL, F
+                      00315     RLCF    quoH, F
+                      00316     GOTO    _next
+                      00317 
+                      00318 _skip_sub
+                      00319     ; quotient bit=0
+                      00320     RLCF    quoL, F
+                      00321     RLCF    quoH, F
+                      00322 
+                      00323 _next
+                      00324     DECFSZ  cnt, F
+                      00325     GOTO    _loop
+Warning[205]: Found directive in column 1. (ENDM)
+                      00326 ENDM
+                      00327 ; divd = 0x31:0x30, divsor=0x32
+                      00328 ; result: quoH:quoL = 0x34:0x33, rem=0x35, counter=0x36
+                      00329 ;DIV16U8_LONG  0x31,0x30, 0x32,  0x34,0x33, 0x35, 0x36
+                      00330 
+                      00331 ;; --- Template for recursion ---
+                      00332 ;RECUR_FUNC:
+                      00333 ;    ; base case
+                      00334 ;    <check condition>
+                      00335 ;    BZ  BASE_DONE
+                      00336 ;
+                      00337 ;    ; save current state
+                      00338 ;    MOVFF PARAM, TEMP
+                      00339 ;    <modify PARAM for recursive call>
+                      00340 ;
+                      00341 ;    CALL RECUR_FUNC       ; recursion
+                      00342 ;
+                      00343 ;    ; restore
+                      00344 ;    MOVFF TEMP, PARAM
+                      00345 ;    <combine result>
+                      00346 ;
+                      00347 ;BASE_DONE:
+                      00348 ;    RETURN
+                      00349 
+                      00350 ; =================== end of toolbelt.inc ===================
+                      00351 
+                      00352 
+                      00353 
+                      00003   LIST P=18F4520
+                      00004   CONFIG OSC = HS
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00005   CONFIG WDT = OFF
+                      00006   cblock 0x20
+  00000020            00007     j  
+  00000021            00008     i 
+  00000022            00009     len
+  00000023            00010     pivot
+                      00011   endc
+                      00012 REST_VECT: CODE 0x0000
+000000 EF?? F???      00013  GOTO   main
+000004                00014 bodyLbl:
+000004 5023           00015   MOVF pivot, w
+000006 64DF           00016   CPFSGT  INDF2, ACCESS
+000008 EF?? F???      00017   GOTO cont
+                      00018 
+00000C EF?? F???      00019   GOTO _return
+000010                00020 cont:
+000010 50EF           00021   MOVF INDF0, w, ACCESS
+000012 CFDF FFEF      00022   MOVFF INDF2, INDF0
+000016 6EDF           00023   MOVWF INDF2, ACCESS
+000018 2A21           00024   INCF i, F
+00001A 2AE9           00025   INCF FSR0L, F
+                      00026 
+00001C                00027 _return:
+00001C 2AD9           00028   INCF FSR2L, F
+                      00029   
+00001E 0012           00030   RETURN
+                      00031 
+                      00032   
+000020                00033 main:
+                      00034   MOVLF 0x07, len
+000020 0E07               M         MOVLW   0x07
+000022 6E22               M         MOVWF   len
+000024 0100           00035   MOVLB 0x000
+000026 EE00 F000      00036   LFSR 0, 0x000
+                      00037   
+                      00038   MOVLF 0x01, POSTINC0
+00002A 0E01               M         MOVLW   0x01
+00002C 6EEE               M         MOVWF   POSTINC0
+                      00039   MOVLF 0x03, POSTINC0
+00002E 0E03               M         MOVLW   0x03
+000030 6EEE               M         MOVWF   POSTINC0
+                      00040   MOVLF 0x07, POSTINC0
+000032 0E07               M         MOVLW   0x07
+000034 6EEE               M         MOVWF   POSTINC0
+                      00041   MOVLF 0x02, POSTINC0
+000036 0E02               M         MOVLW   0x02
+000038 6EEE               M         MOVWF   POSTINC0
+                      00042   MOVLF 0x09, POSTINC0
+00003A 0E09               M         MOVLW   0x09
+00003C 6EEE               M         MOVWF   POSTINC0
+                      00043   MOVLF 0x08, POSTINC0
+00003E 0E08               M         MOVLW   0x08
+000040 6EEE               M         MOVWF   POSTINC0
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00044   MOVLF 0x04, POSTINC0
+000042 0E04               M         MOVLW   0x04
+000044 6EEE               M         MOVWF   POSTINC0
+                      00045   MOVLF 0x06, INDF0
+000046 0E06               M         MOVLW   0x06
+000048 6EEF               M         MOVWF   INDF0
+                      00046   MOVLF 0x01, i
+00004A 0E01               M         MOVLW   0x01
+00004C 6E21               M         MOVWF   i
+                      00047   
+00004E CFEF F023      00048   MOVFF INDF0, pivot;pivot
+000052 6A20           00049   CLRF j
+000054 EE00 F000      00050   LFSR 0, 0x000 ;i
+000058 EE20 F000      00051   LFSR 2, 0x000 ;j
+                      00052   
+                      00053   FOR8 j, 0x07, bodyLbl
+  0000                    M     LOCAL _loop, _end
+00005C 6A20               M     CLRF    j          ; i = 0
+00005E                    M _loop
+00005E 5020               M     MOVF    j, W
+000060 0807               M     SUBLW   0x07       ; compare i with limit
+000062 B4D8               M     BTFSC   STATUS, Z  ; if equal ? stop
+000064 EF?? F???          M     GOTO    _end
+000068 A0D8               M     BTFSS   STATUS, C  ; if i > limit ? stop
+00006A EF?? F???          M     GOTO    _end
+                          M 
+                          M     ; <<< Your code here >>>
+                          M     ; you can either write instructions directly here,
+                          M     ; or define a subroutine and replace the CALL below.
+                          M 
+00006E EC?? F???          M     CALL    bodyLbl    ; body() executes each loop
+                          M 
+000072 2A20               M     INCF    j, F       ; i++
+000074 EF?? F???          M     GOTO    _loop
+000078                    M _end
+                      00054 ;  FOR8_REG j, len, bodyLbl 
+000078 EE20 F000      00055   LFSR 2, 0x000
+00007C 0621           00056   DECF i, f
+00007E 5021           00057   MOVF i, w
+000080 26D9           00058   ADDWF FSR2L, f
+000082 EE00 F007      00059   LFSR 0, 0x007
+                      00060   
+000086 50EF           00061   MOVF INDF0, w, ACCESS
+000088 CFDF FFEF      00062   MOVFF INDF2, INDF0
+00008C 6EDF           00063   MOVWF INDF2, ACCESS
+                      00064 
+Warning[203]: Found opcode in column 1. (NOP)
+00008E 0000           00065 NOP
+                      00066   END
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+A                                 00000000
+ABDEN                             00000000
+ABDOVF                            00000007
+ACCESS                            00000000
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ACQT0                             00000003
+ACQT1                             00000004
+ACQT2                             00000005
+ADCON0                            00000FC2
+ADCON1                            00000FC1
+ADCON2                            00000FC0
+ADCS0                             00000000
+ADCS1                             00000001
+ADCS2                             00000002
+ADD16                             
+ADDEN                             00000003
+ADEN                              00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADIP                              00000006
+ADMSK1                            00000001
+ADMSK2                            00000002
+ADMSK3                            00000003
+ADMSK4                            00000004
+ADMSK5                            00000005
+ADON                              00000000
+ADRES                             00000FC3
+ADRESH                            00000FC4
+ADRESL                            00000FC3
+AN0                               00000000
+AN1                               00000001
+AN10                              00000001
+AN11                              00000004
+AN12                              00000000
+AN2                               00000002
+AN3                               00000003
+AN4                               00000005
+AN5                               00000000
+AN6                               00000001
+AN7                               00000002
+AN8                               00000002
+AN9                               00000003
+ASR16                             
+BANKED                            00000001
+BAUDCON                           00000FB8
+BAUDCTL                           00000FB8
+BCLIE                             00000003
+BCLIF                             00000003
+BCLIP                             00000003
+BF                                00000000
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BGST                              00000005
+BOR                               00000000
+BRG16                             00000003
+BRGH                              00000002
+BSR                               00000FE0
+C                                 00000000
+C1INV                             00000004
+C1OUT_CMCON                       00000006
+C1OUT_PORTA                       00000004
+C2INV                             00000005
+C2OUT_CMCON                       00000007
+C2OUT_PORTA                       00000005
+CCP1                              00000002
+CCP1CON                           00000FBD
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1IP                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           00000FBA
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2IP                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCP2_PORTB                        00000003
+CCP2_PORTC                        00000001
+CCPR1                             00000FBE
+CCPR1H                            00000FBF
+CCPR1L                            00000FBE
+CCPR2                             00000FBB
+CCPR2H                            00000FBC
+CCPR2L                            00000FBB
+CFGS                              00000006
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CIS                               00000003
+CK                                00000006
+CKE                               00000006
+CKP                               00000004
+CLKI                              00000007
+CLKO                              00000006
+CLRBIT                            
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             00000FB4
+CMIE                              00000006
+CMIF                              00000006
+CMIP                              00000006
+CMP16                             
+CREN                              00000004
+CS                                00000002
+CSRC                              00000007
+CVR0                              00000000
+CVR1                              00000001
+CVR2                              00000002
+CVR3                              00000003
+CVRCON                            00000FB5
+CVREF                             00000002
+CVREN                             00000007
+CVROE                             00000006
+CVRR                              00000005
+CVRSS                             00000004
+D                                 00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DDRA                              TRISA
+DDRB                              TRISB
+DDRC                              TRISC
+DDRD                              TRISD
+DDRE                              TRISE
+DEC16                             
+DELAY_LL                          
+DIV16U8                           
+DIV16U8_LONG                      
+DONE                              00000001
+D_A                               00000005
+D_NOT_A                           00000005
+ECCP1AS                           00000FB6
+ECCP1DEL                          00000FB7
+ECCPAS                            00000FB6
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             00000FA9
+EECON1                            00000FA6
+EECON2                            00000FA7
+EEDATA                            00000FA8
+EEIE                              00000004
+EEIF                              00000004
+EEIP                              00000004
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+EEPGD                             00000007
+FAST                              00000001
+FERR                              00000002
+FLT0                              00000000
+FLTS                              00000002
+FOR2D_REG                         
+FOR8                              
+FOR8_REG                          
+FREE                              00000004
+FSR0                              00000000
+FSR0H                             00000FEA
+FSR0L                             00000FE9
+FSR1                              00000001
+FSR1H                             00000FE2
+FSR1L                             00000FE1
+FSR2                              00000002
+FSR2H                             00000FDA
+FSR2L                             00000FD9
+GCEN                              00000007
+GET_LONIB                         
+GIE                               00000007
+GIEH                              00000007
+GIEL                              00000006
+GIE_GIEH                          00000007
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HLVDCON                           00000FD2
+HLVDEN                            00000004
+HLVDIE                            00000002
+HLVDIF                            00000002
+HLVDIN                            00000005
+HLVDIP                            00000002
+HLVDL0                            00000000
+HLVDL1                            00000001
+HLVDL2                            00000002
+HLVDL3                            00000003
+IBF                               00000007
+IBOV                              00000005
+IDLEN                             00000007
+INC16                             
+INDF0                             00000FEF
+INDF1                             00000FE7
+INDF2                             00000FDF
+INT0                              00000000
+INT0E                             00000004
+INT0F                             00000001
+INT0IE                            00000004
+INT0IF                            00000001
+INT1                              00000001
+INT1E                             00000003
+INT1F                             00000000
+INT1IE                            00000003
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INT1IF                            00000000
+INT1IP                            00000006
+INT1P                             00000006
+INT2                              00000002
+INT2E                             00000004
+INT2F                             00000001
+INT2IE                            00000004
+INT2IF                            00000001
+INT2IP                            00000007
+INT2P                             00000007
+INTCON                            00000FF2
+INTCON2                           00000FF1
+INTCON3                           00000FF0
+INTEDG0                           00000006
+INTEDG1                           00000005
+INTEDG2                           00000004
+INTSRC                            00000007
+IOFS                              00000002
+IPEN                              00000007
+IPR1                              00000F9F
+IPR2                              00000FA2
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRVST                             00000005
+IVRST                             00000005
+KBI0                              00000004
+KBI1                              00000005
+KBI2                              00000006
+KBI3                              00000007
+LATA                              00000F89
+LATA0                             00000000
+LATA1                             00000001
+LATA2                             00000002
+LATA3                             00000003
+LATA4                             00000004
+LATA5                             00000005
+LATA6                             00000006
+LATA7                             00000007
+LATB                              00000F8A
+LATB0                             00000000
+LATB1                             00000001
+LATB2                             00000002
+LATB3                             00000003
+LATB4                             00000004
+LATB5                             00000005
+LATB6                             00000006
+LATB7                             00000007
+LATC                              00000F8B
+LATC0                             00000000
+LATC1                             00000001
+LATC2                             00000002
+LATC3                             00000003
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+LATC4                             00000004
+LATC5                             00000005
+LATC6                             00000006
+LATC7                             00000007
+LATD                              00000F8C
+LATD0                             00000000
+LATD1                             00000001
+LATD2                             00000002
+LATD3                             00000003
+LATD4                             00000004
+LATD5                             00000005
+LATD6                             00000006
+LATD7                             00000007
+LATE                              00000F8D
+LATE0                             00000000
+LATE1                             00000001
+LATE2                             00000002
+LSL16                             
+LSR16                             
+LVDCON                            00000FD2
+LVDEN                             00000004
+LVDIE                             00000002
+LVDIF                             00000002
+LVDIN                             00000005
+LVDIP                             00000002
+LVDL0                             00000000
+LVDL1                             00000001
+LVDL2                             00000002
+LVDL3                             00000003
+LVV0                              00000000
+LVV1                              00000001
+LVV2                              00000002
+LVV3                              00000003
+MAC16_8x8                         
+MCLR                              00000003
+MEMSET                            
+MOVLF                             
+N                                 00000004
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BOR                           00000000
+NOT_CS                            00000002
+NOT_DONE                          00000001
+NOT_MCLR                          00000003
+NOT_PD                            00000002
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RD                            00000000
+NOT_RI                            00000004
+NOT_SS                            00000005
+NOT_T1SYNC                        00000002
+NOT_T3SYNC                        00000002
+NOT_TO                            00000003
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NOT_W                             00000002
+NOT_WR                            00000001
+NOT_WRITE                         00000002
+OBF                               00000006
+OERR                              00000001
+OSC1                              00000007
+OSC2                              00000006
+OSCCON                            00000FD3
+OSCFIE                            00000007
+OSCFIF                            00000007
+OSCFIP                            00000007
+OSCTUNE                           00000F9B
+OSTS                              00000003
+OV                                00000003
+P                                 00000004
+P1A                               00000002
+P1B                               00000005
+P1C                               00000006
+P1D                               00000007
+P1M0                              00000006
+P1M1                              00000007
+PACK_NIB                          
+PC                                00000FF9
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000FF9
+PCLATH                            00000FFA
+PCLATU                            00000FFB
+PD                                00000002
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEIE_GIEL                         00000006
+PEN                               00000002
+PGC                               00000006
+PGD                               00000007
+PGM                               00000005
+PIE1                              00000F9D
+PIE2                              00000FA0
+PIR1                              00000F9E
+PIR2                              00000FA1
+PLLEN                             00000006
+PLUSW0                            00000FEB
+PLUSW1                            00000FE3
+PLUSW2                            00000FDB
+POR                               00000001
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PORTA                             00000F80
+PORTB                             00000F81
+PORTC                             00000F82
+PORTD                             00000F83
+PORTE                             00000F84
+POSTDEC0                          00000FED
+POSTDEC1                          00000FE5
+POSTDEC2                          00000FDD
+POSTINC0                          00000FEE
+POSTINC1                          00000FE6
+POSTINC2                          00000FDE
+PR2                               00000FCB
+PREINC0                           00000FEC
+PREINC1                           00000FE4
+PREINC2                           00000FDC
+PROD                              00000FF3
+PRODH                             00000FF4
+PRODL                             00000FF3
+PRSEN                             00000007
+PSA                               00000003
+PSP0                              00000000
+PSP1                              00000001
+PSP2                              00000002
+PSP3                              00000003
+PSP4                              00000004
+PSP5                              00000005
+PSP6                              00000006
+PSP7                              00000007
+PSPIE                             00000007
+PSPIF                             00000007
+PSPIP                             00000007
+PSPMODE                           00000004
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PWM1CON                           00000FB7
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RBIP                              00000000
+RBPU                              00000007
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCIP                              00000005
+RCMT                              00000006
+RCON                              00000FD0
+RCREG                             00000FAE
+RCSTA                             00000FAB
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD16                              00000007
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+RE3                               00000003
+RI                                00000004
+RSEN                              00000001
+RX                                00000007
+RX9                               00000006
+RX9D                              00000000
+RXDTP                             00000005
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000006
+SCK                               00000003
+SCKP                              00000004
+SCL                               00000003
+SCS0                              00000000
+SCS1                              00000001
+SDA                               00000004
+SDI                               00000004
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SDO                               00000005
+SEN                               00000000
+SENDB                             00000003
+SETBIT                            
+SMP                               00000007
+SP0                               00000000
+SP1                               00000001
+SP2                               00000002
+SP3                               00000003
+SP4                               00000004
+SPBRG                             00000FAF
+SPBRGH                            00000FB0
+SPEN                              00000007
+SREN                              00000005
+SS                                00000005
+SSPADD                            00000FC8
+SSPBUF                            00000FC9
+SSPCON1                           00000FC6
+SSPCON2                           00000FC5
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPIP                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000FC7
+STATUS                            00000FD8
+STKFUL                            00000007
+STKOVF                            00000007
+STKPTR                            00000FFC
+STKUNF                            00000006
+SUB16                             
+SWDTE                             00000000
+SWDTEN                            00000000
+SYNC                              00000004
+T016BIT                           00000006
+T08BIT                            00000006
+T0CKI                             00000004
+T0CON                             00000FD5
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0PS0                             00000000
+T0PS1                             00000001
+T0PS2                             00000002
+T0PS3                             00000003
+T0SE                              00000004
+T13CKI                            00000000
+T1CKI                             00000000
+T1CKPS0                           00000004
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T1CKPS1                           00000005
+T1CON                             00000FCD
+T1OSCEN                           00000003
+T1OSI                             00000001
+T1OSO                             00000000
+T1RUN                             00000006
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000FCA
+T2OUTPS0                          00000003
+T2OUTPS1                          00000004
+T2OUTPS2                          00000005
+T2OUTPS3                          00000006
+T3CCP1                            00000003
+T3CCP2                            00000006
+T3CKPS0                           00000004
+T3CKPS1                           00000005
+T3CON                             00000FB1
+T3SYNC                            00000002
+TABLAT                            00000FF5
+TBLPTR                            00000FF6
+TBLPTRH                           00000FF7
+TBLPTRL                           00000FF6
+TBLPTRU                           00000FF8
+TMR0                              00000FD6
+TMR0H                             00000FD7
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR0IP                            00000002
+TMR0L                             00000FD6
+TMR0ON                            00000007
+TMR1                              00000FCE
+TMR1CS                            00000001
+TMR1H                             00000FCF
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1IP                            00000000
+TMR1L                             00000FCE
+TMR1ON                            00000000
+TMR2                              00000FCC
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2IP                            00000001
+TMR2ON                            00000002
+TMR3                              00000FB2
+TMR3CS                            00000001
+TMR3H                             00000FB3
+TMR3IE                            00000001
+TMR3IF                            00000001
+TMR3IP                            00000001
+TMR3L                             00000FB2
+TMR3ON                            00000000
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 21
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TO                                00000003
+TOS                               00000FFD
+TOSH                              00000FFE
+TOSL                              00000FFD
+TOSU                              00000FFF
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000F92
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000F93
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000F94
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000F95
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000F96
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 22
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TUN3                              00000003
+TUN4                              00000004
+TX                                00000006
+TX9                               00000006
+TX9D                              00000000
+TXCKP                             00000004
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXIP                              00000004
+TXREG                             00000FAD
+TXSTA                             00000FAC
+UA                                00000001
+VCFG0                             00000004
+VCFG1                             00000005
+VDIRMAG                           00000007
+VPP                               00000003
+VREFN                             00000002
+VREFP                             00000003
+W                                 00000000
+WAIT_CLR                          
+WAIT_SET                          
+WCOL                              00000007
+WDTCON                            00000FD1
+WR                                00000001
+WREG                              00000FE8
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+XCHG                              
+Z                                 00000002
+_BOREN_NOSLP_2L                   000000FD
+_BOREN_OFF_2L                     000000F9
+_BOREN_ON_2L                      000000FB
+_BOREN_SBORDIS_2L                 000000FF
+_BORV_0_2L                        000000E7
+_BORV_1_2L                        000000EF
+_BORV_2_2L                        000000F7
+_BORV_3_2L                        000000FF
+_CCP2MX_PORTBE_3H                 000000FE
+_CCP2MX_PORTC_3H                  000000FF
+_CONFIG1H                         00300001
+_CONFIG2H                         00300003
+_CONFIG2L                         00300002
+_CONFIG3H                         00300005
+_CONFIG4L                         00300006
+_CONFIG5H                         00300009
+_CONFIG5L                         00300008
+_CONFIG6H                         0030000B
+_CONFIG6L                         0030000A
+_CONFIG7H                         0030000D
+_CONFIG7L                         0030000C
+_CP0_OFF_5L                       000000FF
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_CP0_ON_5L                        000000FE
+_CP1_OFF_5L                       000000FF
+_CP1_ON_5L                        000000FD
+_CP2_OFF_5L                       000000FF
+_CP2_ON_5L                        000000FB
+_CP3_OFF_5L                       000000FF
+_CP3_ON_5L                        000000F7
+_CPB_OFF_5H                       000000FF
+_CPB_ON_5H                        000000BF
+_CPD_OFF_5H                       000000FF
+_CPD_ON_5H                        0000007F
+_DEBUG_OFF_4L                     000000FF
+_DEBUG_ON_4L                      0000007F
+_DEVID1                           003FFFFE
+_DEVID2                           003FFFFF
+_EBTR0_OFF_7L                     000000FF
+_EBTR0_ON_7L                      000000FE
+_EBTR1_OFF_7L                     000000FF
+_EBTR1_ON_7L                      000000FD
+_EBTR2_OFF_7L                     000000FF
+_EBTR2_ON_7L                      000000FB
+_EBTR3_OFF_7L                     000000FF
+_EBTR3_ON_7L                      000000F7
+_EBTRB_OFF_7H                     000000FF
+_EBTRB_ON_7H                      000000BF
+_FCMEN_OFF_1H                     000000BF
+_FCMEN_ON_1H                      000000FF
+_IDLOC0                           00200000
+_IDLOC1                           00200001
+_IDLOC2                           00200002
+_IDLOC3                           00200003
+_IDLOC4                           00200004
+_IDLOC5                           00200005
+_IDLOC6                           00200006
+_IDLOC7                           00200007
+_IESO_OFF_1H                      0000007F
+_IESO_ON_1H                       000000FF
+_LPT1OSC_OFF_3H                   000000FB
+_LPT1OSC_ON_3H                    000000FF
+_LVP_OFF_4L                       000000FB
+_LVP_ON_4L                        000000FF
+_MCLRE_OFF_3H                     0000007F
+_MCLRE_ON_3H                      000000FF
+_OSC_ECIO6_1H                     000000F5
+_OSC_EC_1H                        000000F4
+_OSC_HSPLL_1H                     000000F6
+_OSC_HS_1H                        000000F2
+_OSC_INTIO67_1H                   000000F8
+_OSC_INTIO7_1H                    000000F9
+_OSC_LP_1H                        000000F0
+_OSC_RCIO6_1H                     000000F7
+_OSC_RC_1H                        000000F3
+_OSC_XT_1H                        000000F1
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_PBADEN_OFF_3H                    000000FD
+_PBADEN_ON_3H                     000000FF
+_PWRT_OFF_2L                      000000FF
+_PWRT_ON_2L                       000000FE
+_STVREN_OFF_4L                    000000FE
+_STVREN_ON_4L                     000000FF
+_WDTPS_1024_2H                    000000F5
+_WDTPS_128_2H                     000000EF
+_WDTPS_16384_2H                   000000FD
+_WDTPS_16_2H                      000000E9
+_WDTPS_1_2H                       000000E1
+_WDTPS_2048_2H                    000000F7
+_WDTPS_256_2H                     000000F1
+_WDTPS_2_2H                       000000E3
+_WDTPS_32768_2H                   000000FF
+_WDTPS_32_2H                      000000EB
+_WDTPS_4096_2H                    000000F9
+_WDTPS_4_2H                       000000E5
+_WDTPS_512_2H                     000000F3
+_WDTPS_64_2H                      000000ED
+_WDTPS_8192_2H                    000000FB
+_WDTPS_8_2H                       000000E7
+_WDT_OFF_2H                       000000FE
+_WDT_ON_2H                        000000FF
+_WRT0_OFF_6L                      000000FF
+_WRT0_ON_6L                       000000FE
+_WRT1_OFF_6L                      000000FF
+_WRT1_ON_6L                       000000FD
+_WRT2_OFF_6L                      000000FF
+_WRT2_ON_6L                       000000FB
+_WRT3_OFF_6L                      000000FF
+_WRT3_ON_6L                       000000F7
+_WRTB_OFF_6H                      000000FF
+_WRTB_ON_6H                       000000BF
+_WRTC_OFF_6H                      000000FF
+_WRTC_ON_6H                       000000DF
+_WRTD_OFF_6H                      000000FF
+_WRTD_ON_6H                       0000007F
+_XINST_OFF_4L                     000000BF
+_XINST_ON_4L                      000000FF
+__18F4520                         00000001
+__DEBUG                           
+__MPLAB_DEBUGGER_SIMULATOR        1
+_return                           0000001C
+bodyLbl                           00000004
+cont                              00000010
+i                                 00000021
+j                                 00000020
+len                               00000022
+main                              00000020
+pivot                             00000023
+
+MPASM 5.84               QSORT_PARTITION.ASM   10-21-2025  20:16:46         PAGE 25
+
+
+
+
+
+Errors   :     0
+Warnings :     5 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+
