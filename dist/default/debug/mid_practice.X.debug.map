@@ -1,0 +1,76 @@
+MPLINK 5.09, LINKER
+Linker Map File - Created Tue Oct 21 22:32:54 2025
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000122
+                   .cinit    romdata   0x000122    program   0x000002
+.config_300001_BUILD/DEFAULT/DEBUG/PLAYGROUND.O    romdata   0x300001    program   0x000001
+.config_300003_BUILD/DEFAULT/DEBUG/PLAYGROUND.O    romdata   0x300003    program   0x000001
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000123      
+                            0x300001    0x300001      
+                            0x300003    0x300003      
+            294 out of 33048 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    STEP2   0x000040    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    STEP3   0x00004e    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                _5_a_zero   0x000114    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_b_zero   0x000120    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+              _5_cmp_swap   0x0000ce    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_common   0x00008a    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+               _5_do_swap   0x0000e8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                  _5_done   0x000120    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+              _5_gcd_loop   0x0000b8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+            _5_make_a_odd   0x0000a8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+            _5_shift_back   0x000104    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                   _5_sub   0x0000dc    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_t_even   0x0000be    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                  bodyLbl   0x000004    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                   finish   0x00005c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                     main   0x00005c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+             mul_extended   0x000008    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nH_mH   0x000034    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nH_mL   0x00001c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nL_mH   0x000028    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nL_mL   0x000010    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                  bodyLbl   0x000004    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+             mul_extended   0x000008    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nL_mL   0x000010    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nH_mL   0x00001c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nL_mH   0x000028    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    nH_mH   0x000034    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    STEP2   0x000040    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                    STEP3   0x00004e    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                   finish   0x00005c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\mul_extended.asm
+                     main   0x00005c    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_common   0x00008a    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+            _5_make_a_odd   0x0000a8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+              _5_gcd_loop   0x0000b8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_t_even   0x0000be    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+              _5_cmp_swap   0x0000ce    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                   _5_sub   0x0000dc    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+               _5_do_swap   0x0000e8    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+            _5_shift_back   0x000104    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_a_zero   0x000114    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                  _5_done   0x000120    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+                _5_b_zero   0x000120    program     static C:\Users\Seana\MPLABXProjects\mid_practice.X\playground.asm
+
+

@@ -11,6 +11,44 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
+# Ignore build / output directories
+build/
+dist/
+*.hex
+*.cof
+*.map
+*.lst
+*.obj
+*.o
+*.d
+*.sym
+*.sdb
+*.rlf
+
+# MPLAB X-specific generated files
+.generated_files/
+**/nbproject/Makefile-*
+**/nbproject/Package-*
+**/nbproject/private/
+
+# Logs, temporary files, OS artifacts
+*.log
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Compiled code, binaries etc
+*.elf
+*.hex
+*.bin
+*.a
+*.lib
+
+# Backup / temp
+*~
+# End of template
+
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
