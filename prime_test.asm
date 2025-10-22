@@ -64,7 +64,7 @@ _loop:
     SUBWF   nL, W, ACCESS          ; W = nL - dL
     BTFSS   STATUS, C              ; if borrow ? nL < dL
     GOTO    _prime_done
-
+    BZ      _prime_done            ; if equal (d == n) ? prime
 
 _test_div:
     ; r = n % d
