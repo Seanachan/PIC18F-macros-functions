@@ -109,11 +109,11 @@ ASR16    MACRO xL,xH            ; arithmetic >>1
 ; Helper: NEG16 in-place (two's complement)
 ;   Args:  lo, hi (registers)
 NEG16    MACRO lo, hi
-    COMF    lo, F, ACCESS
-    COMF    hi, F, ACCESS
-    INCF    lo, F, ACCESS
+    COMF    lo, F
+    COMF    hi, F
+    INCF    lo, F
     BTFSC   STATUS, Z
-    INCF    hi, F, ACCESS
+    INCF    hi, F
     ENDM
 
 ; Helper: ABS16 in-place (two's complement if negative)
@@ -260,7 +260,7 @@ _lnx    DECFSZ  cnt,F
         ENDM
 
 ; ======= 16/8 unsigned long-division (remainder + quotient) =======
-; (divH:divL) / divsor  →  quoH:quoL, rem
+; (divH:divL) / divsor  ?  quoH:quoL, rem
 DIV16U8_LONG MACRO divH, divL, divsor, quoH, quoL, rem, cnt
     LOCAL _loop, _no_sub, _next
     CLRF    quoH
@@ -442,7 +442,7 @@ PACK_NIB  MACRO hi,lo,dst
         ENDM
 
 ; div_8_8 divd, divsor, quo_dest, rem_dest
-; (divd / divsor) → quotient in quo_dest, remainder in rem_dest
+; (divd / divsor) ? quotient in quo_dest, remainder in rem_dest
 ; Uses temps: 0x20 (quo), 0x22 (rem), 0x26 (cnt)
 
 div_8_8 MACRO divd, divsor, quo_dest, rem_dest, cnt_dest
@@ -465,14 +465,14 @@ loop:
     BTFSS   STATUS, C
     GOTO    no_sub
 
-    ; rem >= divsor → subtract, shift '1' into quotient
+    ; rem >= divsor ? subtract, shift '1' into quotient
     MOVF    divsor, W
     SUBWF   rem_dest, F         ; rem -= divsor (leaves C=1)
     RLCF    quo_dest, F         ; shift in 1 to quo
     GOTO    next
 
 no_sub:
-    ; rem < divsor → shift '0' into quotient
+    ; rem < divsor ? shift '0' into quotient
     BCF     STATUS, C
     RLCF    quo_dest, F
 
@@ -483,8 +483,8 @@ next:
     CLRF    cnt_dest
 ENDM
 
-;; 16-bit ÷ 16-bit (unsigned, restoring division)
-;; (dH:dL) / (vH:vL) → quoH:quoL, remainder in rH:rL
+;; 16-bit � 16-bit (unsigned, restoring division)
+;; (dH:dL) / (vH:vL) ? quoH:quoL, remainder in rH:rL
 ;; cnt is a scratch loop counter (clobbered)
 ;; Clobbers: WREG, STATUS (C/Z)
 ;; Assumes operands live in access RAM when using ,ACCESS
@@ -537,7 +537,7 @@ _loop
     GOTO    _lt
 
 _ge
-    ; C=1 → quotient bit = 1, then r -= v
+    ; C=1 ? quotient bit = 1, then r -= v
     RLCF    quoL, F, ACCESS
     RLCF    quoH, F, ACCESS
     MOVF    vL, W, ACCESS
@@ -547,7 +547,7 @@ _ge
     GOTO    _next
 
 _lt
-    ; C=0 → quotient bit = 0 (no subtract)
+    ; C=0 ? quotient bit = 0 (no subtract)
     RLCF    quoL, F, ACCESS
     RLCF    quoH, F, ACCESS
 
@@ -566,7 +566,7 @@ ENDM
 SQRT16_NEWTON MACRO nH,nL, xH,xL, qH,qL, rH,rL, tH,tL, iter, cnt_div
     LOCAL _seed_ok, _iter, _done
 
-    ; N==0 → x=0
+    ; N==0 ? x=0
     MOVF    nL, W, ACCESS
     IORWF   nH, W, ACCESS
     BNZ     _seed_ok
@@ -582,7 +582,7 @@ _seed_ok
     MOVFF   nL, xL
     MOVFF   nH, xH
 
-    ; optional safety cap: ≤ 16 Newton steps
+    ; optional safety cap: ? 16 Newton steps
     MOVLW   16
     MOVWF   iter, ACCESS
 
@@ -679,7 +679,7 @@ _mod_try
     BTFSC   STATUS, C      ; if no borrow (t0 >= 0), keep subtracting
     GOTO    _mod_try
 
-    ; borrow occurred → undo last subtract, t0 is remainder
+    ; borrow occurred ? undo last subtract, t0 is remainder
     MOVF    b, W
     ADDWF   t0, F          ; t0 += b (restore to positive remainder)
 
@@ -688,7 +688,7 @@ _mod_done
     MOVFF   b, a
     MOVFF   t0, b
 
-    ; if b == 0 → done (gcd in a)
+    ; if b == 0 ? done (gcd in a)
     MOVF    b, W
     BZ      _b_zero        ; reuse path: dest = a
 
@@ -699,7 +699,7 @@ ENDM
 
 ; =========================================================
 ; GCD16U_STEIN aL,aH, bL,bH, outL,outH,  tL,tH,  k, tmp
-; Computes gcd( (aH:aL), (bH:bL) ) → (outH:outL), unsigned.
+; Computes gcd( (aH:aL), (bH:bL) ) ? (outH:outL), unsigned.
 ; Temps:
 ;   tL:tH = work copy of B
 ;   k     = common power-of-two count
@@ -716,12 +716,12 @@ GCD16U_STEIN MACRO aL,aH, bL,bH, outL,outH, tL,tH, k, tmp
     MOVFF   bL, tL
     MOVFF   bH, tH
 
-    ; if A == 0 → gcd = B
+    ; if A == 0 ? gcd = B
     MOVF    outL, W
     IORWF   outH, W
     BZ      _a_zero
 
-    ; if B == 0 → gcd = A
+    ; if B == 0 ? gcd = A
     MOVF    tL, W
     IORWF   tH, W
     BZ      _b_zero
@@ -757,7 +757,7 @@ _make_a_odd
     GOTO    _make_a_odd
 
 _gcd_loop
-    ; if B == 0 → done (A is gcd)
+    ; if B == 0 ? done (A is gcd)
     MOVF    tL, W
     IORWF   tH, W
     BZ      _shift_back
@@ -776,7 +776,7 @@ _cmp_swap
     MOVF    tL, W
     SUBWF   outL, W        ; W = outL - tL
     MOVF    tH, W
-    SUBWFB  outH, W        ; C=1 → A >= B
+    SUBWFB  outH, W        ; C=1 ? A >= B
     BTFSC   STATUS, C
     GOTO    _do_swap       ; swap if A >= B (safe also for equality)
 
@@ -827,7 +827,7 @@ ENDM
 ; =========================================================
 
 ;---------------------------------------------------------
-; CMP16U  — set flags for unsigned a ? b
+; CMP16U  ? set flags for unsigned a ? b
 ;   Input: aL,aH, bL,bH
 ;   Effect: final C = 1 iff a >= b ; final C = 0 iff a < b
 ;           (Do NOT trust Z for equality)
@@ -840,23 +840,23 @@ CMP16U MACRO aL,aH, bL,bH
 ENDM
 
 ;---------------------------------------------------------
-; BR_LT16U label   — branch if a <  b   (unsigned)
-; BR_GE16U label   — branch if a >= b   (unsigned)
+; BR_LT16U label   ? branch if a <  b   (unsigned)
+; BR_GE16U label   ? branch if a >= b   (unsigned)
 ;   Uses only C from the prior CMP16U
 ;---------------------------------------------------------
 BR_LT16U MACRO label
-    BTFSS   STATUS, C           ; C=0 ⇒ a<b
+    BTFSS   STATUS, C           ; C=0 ? a<b
     GOTO    label
 ENDM
 
 BR_GE16U MACRO label
-    BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+    BTFSC   STATUS, C           ; C=1 ? a>=b
     GOTO    label
 ENDM
 
 ;---------------------------------------------------------
-; BR_EQ16U  aL,aH,bL,bH,label   — branch if a == b
-; BR_NE16U  aL,aH,bL,bH,label   — branch if a != b
+; BR_EQ16U  aL,aH,bL,bH,label   ? branch if a == b
+; BR_NE16U  aL,aH,bL,bH,label   ? branch if a != b
 ;   Uses CPFSEQ (does not touch STATUS) to test equality.
 ;   Safe to call after CMP16U (doesn't clobber C).
 ;---------------------------------------------------------
@@ -881,23 +881,23 @@ BR_NE16U MACRO aL,aH, bL,bH, label
     MOVF    aH, W, ACCESS
     CPFSEQ  bH, ACCESS
     GOTO    _ne                 ; high differs
-    GOTO    _end                ; equal → do not branch
+    GOTO    _end                ; equal ? do not branch
 _ne:
     GOTO    label
 _end:
 ENDM
 
 ;---------------------------------------------------------
-; BR_GT16U  aL,aH,bL,bH,label   — branch if a > b
+; BR_GT16U  aL,aH,bL,bH,label   ? branch if a > b
 ;   Logic: (a>=b) AND (a!=b) without trusting Z.
 ;   Keeps C from CMP16U and checks inequality via CPFSEQ.
 ;---------------------------------------------------------
 BR_GT16U MACRO aL,aH, bL,bH, label
     LOCAL _maybe,_end,_ne
     ; need a>=b first
-    BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+    BTFSC   STATUS, C           ; C=1 ? a>=b
     GOTO    _maybe
-    GOTO    _end                ; a<b → no branch
+    GOTO    _end                ; a<b ? no branch
 
 _maybe:
     ; if a != b, then a>b (since we already know a>=b)
@@ -906,7 +906,7 @@ _maybe:
     GOTO    _ne
     MOVF    aH, W, ACCESS
     CPFSEQ  bH, ACCESS
-    GOTO    _ne                ; equal → not greater
+    GOTO    _ne                ; equal ? not greater
 
     GOTO _end
 _ne:

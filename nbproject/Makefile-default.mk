@@ -30,12 +30,12 @@ ifeq ($(TYPE_IMAGE), DEBUG_RUN)
 IMAGE_TYPE=debug
 OUTPUT_SUFFIX=cof
 DEBUGGABLE_SUFFIX=cof
-FINAL_IMAGE=dist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
+FINAL_IMAGE=dist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
 else
 IMAGE_TYPE=production
 OUTPUT_SUFFIX=hex
 DEBUGGABLE_SUFFIX=cof
-FINAL_IMAGE=dist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
+FINAL_IMAGE=dist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
 endif
 
 ifeq ($(COMPARE_BUILD), true)
@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=lab5_count_primes.asm
+SOURCEFILES_QUOTED_IF_SPACED=3b.asm
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/lab5_count_primes.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/lab5_count_primes.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/3b.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/3b.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/lab5_count_primes.o
+OBJECTFILES=${OBJECTDIR}/3b.o
 
 # Source Files
-SOURCEFILES=lab5_count_primes.asm
+SOURCEFILES=3b.asm
 
 
 CFLAGS=
@@ -87,42 +87,42 @@ FIXDEPS=fixDeps
 ifneq ($(INFORMATION_MESSAGE), )
 	@echo $(INFORMATION_MESSAGE)
 endif
-	${MAKE}  -f nbproject/Makefile-default.mk dist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
+	${MAKE}  -f nbproject/Makefile-default.mk dist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
 
 MP_PROCESSOR_OPTION=18f4520
 MP_LINKER_DEBUG_OPTION= 
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: assemble
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/lab5_count_primes.o: lab5_count_primes.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/3b.o: 3b.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/lab5_count_primes.o.d 
-	@${RM} ${OBJECTDIR}/lab5_count_primes.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/lab5_count_primes.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_SIMULATOR=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/lab5_count_primes.lst\" -e\"${OBJECTDIR}/lab5_count_primes.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/lab5_count_primes.o\" \"lab5_count_primes.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/lab5_count_primes.o"
-	@${FIXDEPS} "${OBJECTDIR}/lab5_count_primes.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} ${OBJECTDIR}/3b.o.d 
+	@${RM} ${OBJECTDIR}/3b.o 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/3b.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_SIMULATOR=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/3b.lst\" -e\"${OBJECTDIR}/3b.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/3b.o\" \"3b.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/3b.o"
+	@${FIXDEPS} "${OBJECTDIR}/3b.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 else
-${OBJECTDIR}/lab5_count_primes.o: lab5_count_primes.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/3b.o: 3b.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/lab5_count_primes.o.d 
-	@${RM} ${OBJECTDIR}/lab5_count_primes.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/lab5_count_primes.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/lab5_count_primes.lst\" -e\"${OBJECTDIR}/lab5_count_primes.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/lab5_count_primes.o\" \"lab5_count_primes.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/lab5_count_primes.o"
-	@${FIXDEPS} "${OBJECTDIR}/lab5_count_primes.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} ${OBJECTDIR}/3b.o.d 
+	@${RM} ${OBJECTDIR}/3b.o 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/3b.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/3b.lst\" -e\"${OBJECTDIR}/3b.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/3b.o\" \"3b.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/3b.o"
+	@${FIXDEPS} "${OBJECTDIR}/3b.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 endif
 
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: link
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-dist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk    
+dist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk    
 	@${MKDIR} dist/${CND_CONF}/${IMAGE_TYPE} 
-	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION)  -w -x -u_DEBUG -z__ICD2RAM=1 -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"   -z__MPLAB_BUILD=1  -z__MPLAB_DEBUG=1 -z__MPLAB_DEBUGGER_SIMULATOR=1 $(MP_LINKER_DEBUG_OPTION) -odist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}     
+	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION)  -w -x -u_DEBUG -z__ICD2RAM=1 -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"   -z__MPLAB_BUILD=1  -z__MPLAB_DEBUG=1 -z__MPLAB_DEBUGGER_SIMULATOR=1 $(MP_LINKER_DEBUG_OPTION) -odist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}     
 else
-dist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk   
+dist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk   
 	@${MKDIR} dist/${CND_CONF}/${IMAGE_TYPE} 
-	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION)  -w  -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"   -z__MPLAB_BUILD=1  -odist/${CND_CONF}/${IMAGE_TYPE}/mid_practice.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}     
+	${MP_LD} $(MP_EXTRA_LD_PRE)   -p$(MP_PROCESSOR_OPTION)  -w  -m"${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"   -z__MPLAB_BUILD=1  -odist/${CND_CONF}/${IMAGE_TYPE}/midtern.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}     
 endif
 
 

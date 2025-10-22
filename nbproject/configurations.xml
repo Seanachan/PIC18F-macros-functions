@@ -12,33 +12,39 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>16_8bit_divide.asm</itemPath>
-      <itemPath>factorial_Cnk.asm</itemPath>
-      <itemPath>fact_range32.asm</itemPath>
-      <itemPath>16_16bit_divide.asm</itemPath>
-      <itemPath>comb_rec.asm</itemPath>
       <itemPath>3a.asm</itemPath>
       <itemPath>toolbelt.asm</itemPath>
-      <itemPath>find_y_y+1_x.asm</itemPath>
-      <itemPath>long_division_CRC16bit_checksum.asm</itemPath>
-      <itemPath>fib_seq_to_gray.asm</itemPath>
-      <itemPath>recur_fib.asm</itemPath>
-      <itemPath>stairs.asm</itemPath>
-      <itemPath>mul_extended.asm</itemPath>
+      <itemPath>16_16bit_divide.asm</itemPath>
+      <itemPath>16_8bit_divide.asm</itemPath>
+      <itemPath>1a.asm</itemPath>
+      <itemPath>1b.asm</itemPath>
+      <itemPath>2a.asm</itemPath>
+      <itemPath>8_8bit_divide.asm</itemPath>
       <itemPath>bubble_sort.asm</itemPath>
-      <itemPath>qsort_partition.asm</itemPath>
-      <itemPath>playground.asm</itemPath>
+      <itemPath>comb_rec.asm</itemPath>
+      <itemPath>fact_range32.asm</itemPath>
+      <itemPath>factorial_Cnk.asm</itemPath>
+      <itemPath>fib_seq_to_gray.asm</itemPath>
+      <itemPath>find_largest_lexicographic_permuation.asm</itemPath>
+      <itemPath>find_y_y+1_x.asm</itemPath>
+      <itemPath>for_loop.asm</itemPath>
       <itemPath>lab2_adv_merge_ascendingly.asm</itemPath>
       <itemPath>lab3_adv_16bit_subtractor.asm</itemPath>
       <itemPath>lab4_unsigned_16bit_div.asm</itemPath>
       <itemPath>lab5_count_primes.asm</itemPath>
-      <itemPath>prime_test.asm</itemPath>
+      <itemPath>mul_extended.asm</itemPath>
+      <itemPath>playground.asm</itemPath>
+      <itemPath>long_division_CRC16bit_checksum.asm</itemPath>
+      <itemPath>2b.asm</itemPath>
+      <itemPath>3b.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>LICENSE</itemPath>
+    <itemPath>Makefile</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>.</Elem>
@@ -57,7 +63,7 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC18Fxxxx_DFP" vendor="Microchip" version="1.1.19"/>
+        <pack name="PIC18Fxxxx_DFP" vendor="Microchip" version="1.0.9"/>
       </packs>
       <compileType>
         <linkerTool>
@@ -84,28 +90,20 @@
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
       <item path="16_16bit_divide.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="16_8bit_divide.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
+      </item>
+      <item path="1a.asm" ex="true" overriding="false">
+      </item>
+      <item path="1b.asm" ex="true" overriding="false">
+      </item>
+      <item path="2a.asm" ex="true" overriding="false">
+      </item>
+      <item path="2b.asm" ex="true" overriding="false">
       </item>
       <item path="3a.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
+      </item>
+      <item path="8_8bit_divide.asm" ex="true" overriding="false">
       </item>
       <MPASMWIN-AS>
         <property key="cross.reference.file" value=""/>
@@ -547,52 +545,22 @@
         <property key="warningmessagebreakoptions.warningmessages" value="holdstate"/>
       </Simulator>
       <item path="bubble_sort.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="comb_rec.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="fact_range32.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="factorial_Cnk.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="fib_seq_to_gray.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
+      </item>
+      <item path="find_largest_lexicographic_permuation.asm"
+            ex="true"
+            overriding="false">
       </item>
       <item path="find_y_y+1_x.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
+      </item>
+      <item path="for_loop.asm" ex="true" overriding="false">
       </item>
       <item path="lab2_adv_merge_ascendingly.asm" ex="true" overriding="false">
       </item>
@@ -600,13 +568,9 @@
       </item>
       <item path="lab4_unsigned_16bit_div.asm" ex="true" overriding="false">
       </item>
+      <item path="lab5_count_primes.asm" ex="true" overriding="false">
+      </item>
       <item path="long_division_CRC16bit_checksum.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <mpasmsuite>
         <property key="absolute-mode" value="false"/>
@@ -616,48 +580,10 @@
         <property key="extended-mode-mplink" value="false"/>
       </mpasmsuite>
       <item path="mul_extended.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
       <item path="playground.asm" ex="true" overriding="false">
       </item>
-      <item path="prime_test.asm" ex="true" overriding="false">
-      </item>
-      <item path="qsort_partition.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="recur_fib.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="stairs.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
       <item path="toolbelt.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
       </item>
     </conf>
   </confs>

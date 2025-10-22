@@ -1,0 +1,22 @@
+#INCLUDE <p18f4520.inc>
+    CONFIG OSC = INTIO67   
+    CONFIG WDT = OFF       
+
+    ORG 0x00   
+    
+    MOVLW 0x7F
+    MOVWF TRISA
+    RLNCF TRISA
+    BCF TRISA, 0
+    
+    MOVLW 0x80
+    ANDWF TRISA, WREG
+    MOVWF 0x00
+    RRNCF TRISA
+    MOVLW 0x7F
+    ANDWF TRISA, F
+    MOVF 0x00, W
+    ADDWF TRISA, F
+    END
+
+

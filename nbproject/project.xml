@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>mid_practice</name>
-            <creation-uuid>9e136305-918d-42ad-9d61-ecb3bf72bc17</creation-uuid>
+            <name>midtern</name>
+            <creation-uuid>b9ffd452-3953-42f2-a789-b54b8ee96bcf</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions/>
             <cpp-extensions/>

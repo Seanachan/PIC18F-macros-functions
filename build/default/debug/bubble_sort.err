@@ -1,13 +1,130 @@
-Warning[205] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\TOOLBELT.ASM 145 : Found directive in column 1. (ENDM)
-Warning[205] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\TOOLBELT.ASM 168 : Found directive in column 1. (ENDM)
-Warning[205] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\TOOLBELT.ASM 214 : Found directive in column 1. (ENDM)
-Warning[205] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\TOOLBELT.ASM 322 : Found directive in column 1. (ENDM)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 40 : Found label after column 1. (nL_mL)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 48 : Found label after column 1. (nH_mL)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 56 : Found label after column 1. (nL_mH)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 64 : Found label after column 1. (nH_mH)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 73 : Found label after column 1. (STEP2)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 84 : Found label after column 1. (STEP3)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 94 : Found label after column 1. (finish)
-Warning[203] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 96 : Found opcode in column 1. (RETURN)
-Warning[207] C:\USERS\SEANA\MPLABXPROJECTS\MID_PRACTICE.X\BUBBLE_SORT.ASM 102 : Found label after column 1. (swapff)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 33 : Found label after column 1. (max)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 34 : Found label after column 1. (baseL)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 35 : Found label after column 1. (len)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 36 : Found label after column 1. (upr)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 37 : Found label after column 1. (j)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 38 : Found label after column 1. (temp)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 39 : Found label after column 1. (swapped)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 40 : Found label after column 1. (status_tmp)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 41 : Found label after column 1. (bsr_tmp)
+Warning[207] C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 42 : Found label after column 1. (w_tmp)
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 44 : Labels must be defined in a code or data section when making an object file
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 46 : Symbol not previously defined (WREG)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 46 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 46 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 47 : Symbol not previously defined (STATUS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 47 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 47 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 48 : Symbol not previously defined (BSR)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 48 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 48 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 49 : Symbol not previously defined (BSR)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 49 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 51 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 53 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 53 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 54 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 54 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 55 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 55 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 56 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 57 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 57 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 60 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 60 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 61 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 62 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 62 : Executable code and data must be defined in an appropriate section
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 64 : Labels must be defined in a code or data section when making an object file
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 65 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 65 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 68 : Symbol not previously defined (FSR0H)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 68 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 68 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 69 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 69 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 70 : Symbol not previously defined (FSR0L)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 70 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 70 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 72 : Symbol not previously defined (FSR1H)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 72 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 72 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 73 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 73 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 74 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 75 : Symbol not previously defined (FSR1L)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 75 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 75 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 78 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 78 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 79 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 79 : Executable code and data must be defined in an appropriate section
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 81 : Labels must be defined in a code or data section when making an object file
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 83 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 83 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 84 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 84 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 87 : Symbol not previously defined (INDF0)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 87 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 87 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 88 : Symbol not previously defined (INDF1)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 88 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 88 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 89 : Symbol not previously defined (C)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 89 : Symbol not previously defined (STATUS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 89 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 90 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 90 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 93 : Symbol not previously defined (INDF0)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 93 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 93 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 94 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 94 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 95 : Symbol not previously defined (INDF1)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 95 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 95 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 96 : Symbol not previously defined (INDF0)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 96 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 96 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 97 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 97 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 98 : Symbol not previously defined (INDF1)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 98 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 98 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 99 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 100 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 100 : Executable code and data must be defined in an appropriate section
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 102 : Labels must be defined in a code or data section when making an object file
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 103 : Symbol not previously defined (FSR0L)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 103 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 103 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 104 : Symbol not previously defined (FSR1L)
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 104 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 104 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 105 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 105 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 106 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 106 : Executable code and data must be defined in an appropriate section
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 108 : Labels must be defined in a code or data section when making an object file
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 110 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 110 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 111 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 111 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 114 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 114 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 115 : Symbol not previously defined (ACCESS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 115 : Executable code and data must be defined in an appropriate section
+Error[151]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 116 : Operand contains unresolvable labels or is too complex
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 116 : Executable code and data must be defined in an appropriate section
+Error[150]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 118 : Labels must be defined in a code or data section when making an object file
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 120 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 120 : Symbol not previously defined (BSR)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 120 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 121 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 121 : Symbol not previously defined (STATUS)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 121 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 122 : Executable code and data must be defined in an appropriate section
+Error[113]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 122 : Symbol not previously defined (WREG)
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 122 : Executable code and data must be defined in an appropriate section
+Error[152]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 123 : Executable code and data must be defined in an appropriate section
+Error[129]   C:\USERS\USER\MPLABXPROJECTS\MIDTERN.X\BUBBLE_SORT.ASM 124 : Expected (END)

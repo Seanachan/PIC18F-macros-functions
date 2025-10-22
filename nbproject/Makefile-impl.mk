@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=mid_practice.X
+PROJECTNAME=midtern.X
 
 # Active Configuration
 DEFAULTCONF=default
