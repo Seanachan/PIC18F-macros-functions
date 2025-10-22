@@ -1,4 +1,4 @@
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  1
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -45,638 +45,944 @@ Warning[205]: Found directive in column 1. (LIST)
                       00025         MOVF    sH,W
                       00026         ADDWFC  dH,F
                       00027         ENDM
-                      00028 SUB16    MACRO dL,dH,sL,sH
-                      00029         MOVF    sL,W
-                      00030         SUBWF   dL,F
-                      00031         MOVF    sH,W
-                      00032         SUBWFB  dH,F
-                      00033         ENDM
-                      00034 CMP16    MACRO aL,aH,bL,bH     ; sets C/Z from (a-b) without changing a
-                      00035         LOCAL   _c1,_c2
-                      00036         MOVF    bL,W
-                      00037         SUBWF   aL,W           ; W=(aL-bL)
-                      00038         MOVWF   0x7F           ; temp in access if allowed; else change
-                      00039 _c1     MOVF    bH,W
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  2
+                      00028 
+                      00029 ADD16_TO MACRO aL,aH, bL,bH, rL,rH
+                      00030         ; rL = aL + bL
+                      00031         MOVFF   aL, rL
+                      00032         MOVF    bL, W
+                      00033         ADDWF   rL, F
+                      00034 
+                      00035         ; rH = aH + bH + carry
+                      00036         MOVFF   aH, rH
+                      00037         MOVF    bH, W
+                      00038         ADDWFC  rH, F
+                      00039         ENDM
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00040         SUBWFB  aH,W
-                      00041         ENDM
-                      00042 INC16    MACRO xL,xH
-                      00043         INCF    xL,F
-                      00044         BTFSC   STATUS,0
-                      00045         INCF    xH,F
+                      00040 
+                      00041 SUB16    MACRO dL,dH,sL,sH ;d -= s
+                      00042         MOVF    sL,W
+                      00043         SUBWF   dL,F
+                      00044         MOVF    sH,W
+                      00045         SUBWFB  dH,F
                       00046         ENDM
-                      00047 DEC16    MACRO xL,xH
-                      00048         MOVLW   1
-                      00049         SUBWF   xL,F
-                      00050         BTFSS   STATUS,0
-                      00051         DECF    xH,F
-                      00052         ENDM
-                      00053 
-                      00054 ; --- logical & arithmetic shifts (16-bit) ---
-                      00055 LSL16    MACRO xL,xH
-                      00056         BCF     STATUS,0
-                      00057         RLCF    xL,F
-                      00058         RLCF    xH,F
-                      00059         ENDM
-                      00060 LSR16    MACRO xL,xH
-                      00061         BCF     STATUS,0
-                      00062         RRCF    xH,F
-                      00063         RRCF    xL,F
-                      00064         ENDM
-                      00065 ASR16    MACRO xL,xH            ; arithmetic >>1
-                      00066         BTFSC   xH,7
-                      00067         BSF     STATUS,0
-                      00068         BTFSS   xH,7
-                      00069         BCF     STATUS,0
-                      00070         RRCF    xH,F
-                      00071         RRCF    xL,F
-                      00072         ENDM
-                      00073 
-                      00074 ; --- 16/8 unsigned division: (dH:dL)/div -> quoH:quoL, rem ---
-                      00075 DIV16U8  MACRO dH,dL, div, quoH,quoL, rem, cnt
-                      00076         LOCAL   _h,_hge,_hnx,_l,_lge,_lnx
-                      00077         CLRF    quoH
-                      00078         CLRF    rem
-                      00079         MOVLW   8
-                      00080         MOVWF   cnt
-                      00081 _h      RLCF    dH,F
-                      00082         RLCF    rem,F
-                      00083         MOVF    div,W
-                      00084         SUBWF   rem,W
-                      00085         BTFSC   STATUS,0
-                      00086         GOTO    _hge
-                      00087         BCF     STATUS,0
-                      00088         RLCF    quoH,F
-                      00089         GOTO    _hnx
-                      00090 _hge    MOVF    div,W
-                      00091         SUBWF   rem,F
-                      00092         BSF     STATUS,0
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  3
+                      00047 
+                      00048 SUB16_TO    MACRO dL,dH,sL,sH, rL, rH ;r = d - s
+                      00049         ; rL = dL - sL
+                      00050         MOVFF   dL, rL
+                      00051         MOVF    sL, W
+                      00052         SUBWF   rL, F
+                      00053         ; BTFSS STATUS, C  ;for not using SUBWFB
+                      00054         ; MOVLF 0x01, 0x40
+                      00055 
+                      00056         ; rH = dH - sH - borrow
+                      00057         MOVFF   dH, rH
+                      00058         MOVF    sH, W
+                      00059         SUBWF  rH, F
+                      00060 
+                      00061         ; BTFSC    0x40, 0
+                      00062         ; DECF rH
+                      00063         ENDM
+                      00064 CMP16    MACRO aL,aH,bL,bH     ; sets C/Z from (a-b) without changing a
+                      00065         LOCAL   _c1,_c2
+                      00066         MOVF    bL,W
+                      00067         SUBWF   aL,W           ; W=(aL-bL)
+                      00068         MOVWF   0x7F           ; temp in access if allowed; else change
+                      00069 _c1     MOVF    bH,W
+                      00070         SUBWFB  aH,W
+                      00071         ENDM
+                      00072 INC16    MACRO xL,xH
+                      00073         INCF    xL,F
+                      00074         BTFSC   STATUS,0
+                      00075         INCF    xH,F
+                      00076         ENDM
+                      00077 DEC16    MACRO xL,xH
+                      00078         MOVLW   1
+                      00079         SUBWF   xL,F
+                      00080         BTFSS   STATUS,0
+                      00081         DECF    xH,F
+                      00082         ENDM
+                      00083 
+                      00084 ; --- logical & arithmetic shifts (16-bit) ---
+                      00085 LSL16    MACRO xL,xH
+                      00086         BCF     STATUS,0
+                      00087         RLCF    xL,F
+                      00088         RLCF    xH,F
+                      00089         ENDM
+                      00090 LSR16    MACRO xL,xH
+                      00091         BCF     STATUS,0
+                      00092         RRCF    xH,F
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00093         RLCF    quoH,F
-                      00094 _hnx    DECFSZ  cnt,F
-                      00095         GOTO    _h
-                      00096         CLRF    quoL
-                      00097         MOVLW   8
-                      00098         MOVWF   cnt
-                      00099 _l      RLCF    dL,F
-                      00100         RLCF    rem,F
-                      00101         MOVF    div,W
-                      00102         SUBWF   rem,W
-                      00103         BTFSC   STATUS,0
-                      00104         GOTO    _lge
-                      00105         BCF     STATUS,0
-                      00106         RLCF    quoL,F
-                      00107         GOTO    _lnx
-                      00108 _lge    MOVF    div,W
-                      00109         SUBWF   rem,F
-                      00110         BSF     STATUS,0
-                      00111         RLCF    quoL,F
-                      00112 _lnx    DECFSZ  cnt,F
-                      00113         GOTO    _l
-                      00114         ENDM
-                      00115 
-                      00116 ; --- 8x8 -> 16 multiply accumulate: acc += a*b (acc = aH:aL) ---
-                      00117 MAC16_8x8 MACRO a,b, accL,accH
-                      00118         MOVF    a,W
-                      00119         MULWF   b              ; PRODH:PRODL = a*b
-                      00120         MOVF    PRODL,W
-                      00121         ADDWF   accL,F
-                      00122         MOVF    PRODH,W
-                      00123         ADDWFC  accH,F
-                      00124         ENDM
-                      00125 
-                      00126 ; FOR8_REG i, limReg, bodyLbl
-                      00127 ; for (i=0; i<[*limReg]; i++) bodyLbl();
-                      00128 FOR8_REG MACRO i, limReg , bodyLbl
-                      00129     LOCAL _loop, _end
-                      00130     CLRF    i
-                      00131 _loop
-                      00132     MOVF    i, W, ACCESS
-                      00133     SUBWF   limReg, w, ACCESS
-                      00134     BTFSC   STATUS, Z  ; if equal ? stop
-                      00135     GOTO    _end
-                      00136     BTFSS   STATUS, C  ; if i > limit ? stop
-                      00137     GOTO    _end
-                      00138 
-                      00139     ; <<< Your code here >>>
-                      00140     ; you can either write instructions directly here,
-                      00141     ; or define a subroutine and replace the CALL below.
-                      00142 
-                      00143     CALL    bodyLbl    ; body() executes each loop
-                      00144 
-                      00145     INCF    i, F, ACCESS       ; i++
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  4
+                      00093         RRCF    xL,F
+                      00094         ENDM
+                      00095 ASR16    MACRO xL,xH            ; arithmetic >>1
+                      00096         BTFSC   xH,7
+                      00097         BSF     STATUS,0
+                      00098         BTFSS   xH,7
+                      00099         BCF     STATUS,0
+                      00100         RRCF    xH,F
+                      00101         RRCF    xL,F
+                      00102         ENDM
+                      00103 
+                      00104 ; --- 16/8 unsigned division: (dH:dL)/div -> quoH:quoL, rem ---
+                      00105 DIV16U8  MACRO dH,dL, div, quoH,quoL, rem, cnt
+                      00106         LOCAL   _h,_hge,_hnx,_l,_lge,_lnx
+                      00107         CLRF    quoH
+                      00108         CLRF    rem
+                      00109         MOVLW   8
+                      00110         MOVWF   cnt
+                      00111 _h      RLCF    dH,F
+                      00112         RLCF    rem,F
+                      00113         MOVF    div,W
+                      00114         SUBWF   rem,W
+                      00115         BTFSC   STATUS,0
+                      00116         GOTO    _hge
+                      00117         BCF     STATUS,0
+                      00118         RLCF    quoH,F
+                      00119         GOTO    _hnx
+                      00120 _hge    MOVF    div,W
+                      00121         SUBWF   rem,F
+                      00122         BSF     STATUS,0
+                      00123         RLCF    quoH,F
+                      00124 _hnx    DECFSZ  cnt,F
+                      00125         GOTO    _h
+                      00126         CLRF    quoL
+                      00127         MOVLW   8
+                      00128         MOVWF   cnt
+                      00129 _l      RLCF    dL,F
+                      00130         RLCF    rem,F
+                      00131         MOVF    div,W
+                      00132         SUBWF   rem,W
+                      00133         BTFSC   STATUS,0
+                      00134         GOTO    _lge
+                      00135         BCF     STATUS,0
+                      00136         RLCF    quoL,F
+                      00137         GOTO    _lnx
+                      00138 _lge    MOVF    div,W
+                      00139         SUBWF   rem,F
+                      00140         BSF     STATUS,0
+                      00141         RLCF    quoL,F
+                      00142 _lnx    DECFSZ  cnt,F
+                      00143         GOTO    _l
+                      00144         ENDM
+                      00145 
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00146     GOTO    _loop
-                      00147 _end
-Warning[205]: Found directive in column 1. (ENDM)
-                      00148 ENDM
-                      00149 
-                      00150 
-                      00151 ; --- simple 8-bit for(i=0;i<limit;i++) { body() } ---
-                      00152 FOR8 MACRO i, limit, bodyLbl
-                      00153     LOCAL _loop, _end
-                      00154     CLRF    i          ; i = 0
-                      00155 _loop
-                      00156     MOVF    i, W
-                      00157     SUBLW   limit      ; compare i with limit
-                      00158     BTFSC   STATUS, Z  ; if equal ? stop
-                      00159     GOTO    _end
-                      00160     BTFSS   STATUS, C  ; if i > limit ? stop
-                      00161     GOTO    _end
-                      00162 
-                      00163     ; <<< Your code here >>>
-                      00164     ; you can either write instructions directly here,
-                      00165     ; or define a subroutine and replace the CALL below.
-                      00166 
-                      00167     CALL    bodyLbl    ; body() executes each loop
+                      00146 ; --- 8x8 -> 16 multiply accumulate: acc += a*b (acc = aH:aL) ---
+                      00147 MAC16_8x8 MACRO a,b, accL,accH
+                      00148         MOVF    a,W
+                      00149         MULWF   b              ; PRODH:PRODL = a*b
+                      00150         MOVF    PRODL,W
+                      00151         ADDWF   accL,F
+                      00152         MOVF    PRODH,W
+                      00153         ADDWFC  accH,F
+                      00154         ENDM
+                      00155 
+                      00156 ; FOR8_REG i, limReg, bodyLbl
+                      00157 ; for (i=0; i<[*limReg]; i++) bodyLbl();
+                      00158 FOR8_REG MACRO i, limReg , bodyLbl
+                      00159     LOCAL _loop, _end
+                      00160     CLRF    i
+                      00161 _loop
+                      00162     MOVF    i, W, ACCESS
+                      00163     SUBWF   limReg, w, ACCESS
+                      00164     BTFSC   STATUS, Z  ; if equal ? stop
+                      00165     GOTO    _end
+                      00166     BTFSS   STATUS, C  ; if i > limit ? stop
+                      00167     GOTO    _end
                       00168 
-                      00169     INCF    i, F       ; i++
-                      00170     GOTO    _loop
-                      00171 _end
+                      00169     ; <<< Your code here >>>
+                      00170     ; you can either write instructions directly here,
+                      00171     ; or define a subroutine and replace the CALL below.
+                      00172 
+                      00173     CALL    bodyLbl    ; body() executes each loop
+                      00174 
+                      00175     INCF    i, F, ACCESS       ; i++
+                      00176     GOTO    _loop
+                      00177 _end
 Warning[205]: Found directive in column 1. (ENDM)
-                      00172 ENDM
-                      00173 
-                      00174 ; ============================================================
-                      00175 ; FOR2D_REG i, j, limI, limJ, bodyLbl
-                      00176 ; for (i=0; i<[*limI]; i++)
-                      00177 ;   for (j=0; j<[*limJ]; j++)
-                      00178 ;       bodyLbl();
-                      00179 ; Notes:
-                      00180 ;  - limI, limJ are register addresses holding the limits.
-                      00181 ;  - Compares via (i - limit) so:
-                      00182 ;      Z=1 ? i == limit  ? stop
-                      00183 ;      C=1 ? i >  limit  ? stop (no-borrow means i >= limit)
-                      00184 ; ============================================================
-                      00185 FOR2D_REG MACRO i, j, limI, limJ, bodyLbl
-                      00186     LOCAL _outer, _inner, _end_inner, _end_outer
-                      00187 
-                      00188     CLRF    i                 ; i = 0
-                      00189 _outer
-                      00190     MOVF    limI, W
-                      00191     SUBWF   i, W              ; W = i - limI
-                      00192     BTFSC   STATUS, Z         ; i == limI ?
-                      00193     GOTO    _end_outer
-                      00194     BTFSC   STATUS, C         ; i > limI ?
-                      00195     GOTO    _end_outer
+                      00178 ENDM
+                      00179 
+                      00180 
+                      00181 ; --- simple 8-bit for(i=0;i<limit;i++) { body() } ---
+                      00182 FOR8 MACRO i, limit, bodyLbl
+                      00183     LOCAL _loop, _end
+                      00184     CLRF    i          ; i = 0
+                      00185 _loop
+                      00186     MOVF    i, W
+                      00187     SUBLW   limit      ; compare i with limit
+                      00188     BTFSC   STATUS, Z  ; if equal ? stop
+                      00189     GOTO    _end
+                      00190     BTFSS   STATUS, C  ; if i > limit ? stop
+                      00191     GOTO    _end
+                      00192 
+                      00193     ; <<< Your code here >>>
+                      00194     ; you can either write instructions directly here,
+                      00195     ; or define a subroutine and replace the CALL below.
                       00196 
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  5
+                      00197     CALL    bodyLbl    ; body() executes each loop
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00197     CLRF    j                 ; j = 0
-                      00198 _inner
-                      00199     MOVF    limJ, W
-                      00200     SUBWF   j, W              ; W = j - limJ
-                      00201     BTFSC   STATUS, Z         ; j == limJ ?
-                      00202     GOTO    _end_inner
-                      00203     BTFSC   STATUS, C         ; j > limJ ?
-                      00204     GOTO    _end_inner
-                      00205 
-                      00206     ; ---------- your operation here ----------
-                      00207     CALL    bodyLbl
-                      00208     ; -----------------------------------------
-                      00209 
-                      00210     INCF    j, F              ; j++
-                      00211     GOTO    _inner
-                      00212 
-                      00213 _end_inner
-                      00214     INCF    i, F              ; i++
-                      00215     GOTO    _outer
-                      00216 
-                      00217 _end_outer
+                      00198 
+                      00199     INCF    i, F       ; i++
+                      00200     GOTO    _loop
+                      00201 _end
 Warning[205]: Found directive in column 1. (ENDM)
-                      00218 ENDM
-                      00219 
-                      00220 
-                      00221     
-                      00222 ; --- memset: fill count bytes at FSRx with value in W ---
-                      00223 MEMSET   MACRO fsrL,fsrH, count
-                      00224         LOCAL   _ms1,_ms2
-                      00225 _ms1    MOVF    count,W
-                      00226         BZ      _ms2
-                      00227         MOVWF   POSTINC0       ; assumes FSR0 targeted; change if needed
-                      00228         DECF    count,F
-                      00229         GOTO    _ms1
-                      00230 _ms2    ENDM
-                      00231 
-                      00232 ; --- memcpy: copy count bytes FSR0 -> FSR1 ---
-                      00233 MEMCPY   MACRO count
-                      00234         LOCAL   _cp1,_cp2
-                      00235 _cp1    MOVF    count,W
-                      00236         BZ      _cp2
-                      00237         MOVF    POSTINC0,W
-                      00238         MOVWF   POSTINC1
-                      00239         DECF    count,F
-                      00240         GOTO    _cp1
-                      00241 _cp2    ENDM
+                      00202 ENDM
+                      00203 
+                      00204 ; ============================================================
+                      00205 ; FOR2D_REG i, j, limI, limJ, bodyLbl
+                      00206 ; for (i=0; i<[*limI]; i++)
+                      00207 ;   for (j=0; j<[*limJ]; j++)
+                      00208 ;       bodyLbl();
+                      00209 ; Notes:
+                      00210 ;  - limI, limJ are register addresses holding the limits.
+                      00211 ;  - Compares via (i - limit) so:
+                      00212 ;      Z=1 ? i == limit  ? stop
+                      00213 ;      C=1 ? i >  limit  ? stop (no-borrow means i >= limit)
+                      00214 ; ============================================================
+                      00215 FOR2D_REG MACRO i, j, limI, limJ, bodyLbl
+                      00216     LOCAL _outer, _inner, _end_inner, _end_outer
+                      00217 
+                      00218     CLRF    i                 ; i = 0
+                      00219 _outer
+                      00220     MOVF    limI, W
+                      00221     SUBWF   i, W              ; W = i - limI
+                      00222     BTFSC   STATUS, Z         ; i == limI ?
+                      00223     GOTO    _end_outer
+                      00224     BTFSC   STATUS, C         ; i > limI ?
+                      00225     GOTO    _end_outer
+                      00226 
+                      00227     CLRF    j                 ; j = 0
+                      00228 _inner
+                      00229     MOVF    limJ, W
+                      00230     SUBWF   j, W              ; W = j - limJ
+                      00231     BTFSC   STATUS, Z         ; j == limJ ?
+                      00232     GOTO    _end_inner
+                      00233     BTFSC   STATUS, C         ; j > limJ ?
+                      00234     GOTO    _end_inner
+                      00235 
+                      00236     ; ---------- your operation here ----------
+                      00237     CALL    bodyLbl
+                      00238     ; -----------------------------------------
+                      00239 
+                      00240     INCF    j, F              ; j++
+                      00241     GOTO    _inner
                       00242 
-                      00243 ; --- nibble helpers ---
-                      00244 GET_HINIB MACRO src,dst
-                      00245         MOVF    src,W
-                      00246         MOVWF   dst
-                      00247         SWAPF   dst,F
-                      00248         ANDLW   0x0F
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  6
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00249         MOVWF   dst
-                      00250         ENDM
-                      00251 GET_LONIB MACRO src,dst
-                      00252         MOVF    src,W
-                      00253         ANDLW   0x0F
-                      00254         MOVWF   dst
-                      00255         ENDM
-                      00256 PACK_NIB  MACRO hi,lo,dst
-                      00257         MOVF    hi,W
-                      00258         ANDLW   0x0F
-                      00259         MOVWF   dst
-                      00260         SWAPF   dst,F
-                      00261         MOVF    lo,W
-                      00262         ANDLW   0x0F
-                      00263         IORWF   dst,F
-                      00264         ENDM
-                      00265 
-                      00266 
-                      00267 ; div_8_8 divd, divsor, quo_dest, rem_dest
-                      00268 ; (divd / divsor) → quotient in quo_dest, remainder in rem_dest
-                      00269 ; Uses temps: 0x20 (quo), 0x22 (rem), 0x26 (cnt)
-                      00270 
-                      00271 div_8_8 MACRO divd, divsor, quo_dest, rem_dest, cnt_dest
-                      00272     LOCAL loop, no_sub, next
-                      00273 
-                      00274     CLRF    quo_dest            ; quo
-                      00275     CLRF    rem_dest            ; rem
-                      00276     MOVLW   8
-                      00277     MOVWF   cnt_dest            ; cnt = 8
-                      00278 
-                      00279 loop:
-                      00280     ; shift dividend bit into remainder (MSB-first)
-                      00281     BCF     STATUS, C       ; ensure 0 shifts into LSB
-                      00282     RLCF    divd, F
-                      00283     RLCF    rem_dest, F         ; rem <<= 1 | carry
-                      00284 
-                      00285     ; compare rem vs divsor (unsigned)
-                      00286     MOVF    divsor, W
-                      00287     SUBWF   rem_dest, W         ; C=1 if rem >= divsor
-                      00288     BTFSS   STATUS, C
-                      00289     GOTO    no_sub
-                      00290 
-                      00291     ; rem >= divsor → subtract, shift '1' into quotient
-                      00292     MOVF    divsor, W
-                      00293     SUBWF   rem_dest, F         ; rem -= divsor (leaves C=1)
-                      00294     RLCF    quo_dest, F         ; shift in 1 to quo
-                      00295     GOTO    next
-                      00296 
-                      00297 no_sub:
-                      00298     ; rem < divsor → shift '0' into quotient
-                      00299     BCF     STATUS, C
-                      00300     RLCF    quo_dest, F
-                      00301 
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  7
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00302 next:
-                      00303     DECFSZ  cnt_dest, F
-                      00304     GOTO    loop
-                      00305 
-                      00306     CLRF    cnt_dest
+                      00243 _end_inner
+                      00244     INCF    i, F              ; i++
+                      00245     GOTO    _outer
+                      00246 
+                      00247 _end_outer
 Warning[205]: Found directive in column 1. (ENDM)
-                      00307 ENDM
-                      00308 
-                      00309 
-                      00310 
-                      00311 ; 16-bit ÷ 8-bit Unsigned (long division)
-                      00312 ; (divH:divL) / divsor  →  quoH:quoL, rem
-                      00313 DIV16U8_LONG MACRO divH, divL, divsor, quoH, quoL, rem, cnt
-                      00314     LOCAL _loop, _no_sub, _next
-                      00315 
-                      00316     CLRF    quoH
-                      00317     CLRF    quoL
-                      00318     CLRF    rem
-                      00319     MOVLW   9
-                      00320     MOVWF   cnt
-                      00321 
-                      00322 _loop
-                      00323     ; --- shift dividend into remainder (MSB-first) ---
-                      00324     BCF     STATUS, C      ; << ensure 0 shifts into divL LSB
-                      00325     RLCF    divL, F
-                      00326     RLCF    divH, F
-                      00327     RLCF    rem, F         ; C now = old bit7 of rem (not used next)
-                      00328 
-                      00329     ; --- test rem >= divsor (unsigned) ---
-                      00330     MOVF    divsor, W
-                      00331     SUBWF   rem, W         ; C=1 if rem >= divsor
-                      00332     BTFSS   STATUS, C
-                      00333     GOTO    _no_sub
+                      00248 ENDM
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00249 
+                      00250 
+                      00251     
+                      00252 ; --- memset: fill count bytes at FSRx with value in W ---
+                      00253 MEMSET   MACRO fsrL,fsrH, count
+                      00254         LOCAL   _ms1,_ms2
+                      00255 _ms1    MOVF    count,W
+                      00256         BZ      _ms2
+                      00257         MOVWF   POSTINC0       ; assumes FSR0 targeted; change if needed
+                      00258         DECF    count,F
+                      00259         GOTO    _ms1
+                      00260 _ms2    ENDM
+                      00261 
+                      00262 ; --- memcpy: copy count bytes FSR0 -> FSR1 ---
+                      00263 MEMCPY   MACRO count
+                      00264         LOCAL   _cp1,_cp2
+                      00265 _cp1    MOVF    count,W
+                      00266         BZ      _cp2
+                      00267         MOVF    POSTINC0,W
+                      00268         MOVWF   POSTINC1
+                      00269         DECF    count,F
+                      00270         GOTO    _cp1
+                      00271 _cp2    ENDM
+                      00272 
+                      00273 ; --- nibble helpers ---
+                      00274 GET_HINIB MACRO src,dst
+                      00275         MOVF    src,W
+                      00276         MOVWF   dst
+                      00277         SWAPF   dst,F
+                      00278         ANDLW   0x0F
+                      00279         MOVWF   dst
+                      00280         ENDM
+                      00281 GET_LONIB MACRO src,dst
+                      00282         MOVF    src,W
+                      00283         ANDLW   0x0F
+                      00284         MOVWF   dst
+                      00285         ENDM
+                      00286 PACK_NIB  MACRO hi,lo,dst
+                      00287         MOVF    hi,W
+                      00288         ANDLW   0x0F
+                      00289         MOVWF   dst
+                      00290         SWAPF   dst,F
+                      00291         MOVF    lo,W
+                      00292         ANDLW   0x0F
+                      00293         IORWF   dst,F
+                      00294         ENDM
+                      00295 
+                      00296 ; div_8_8 divd, divsor, quo_dest, rem_dest
+                      00297 ; (divd / divsor) → quotient in quo_dest, remainder in rem_dest
+                      00298 ; Uses temps: 0x20 (quo), 0x22 (rem), 0x26 (cnt)
+                      00299 
+                      00300 div_8_8 MACRO divd, divsor, quo_dest, rem_dest, cnt_dest
+                      00301     LOCAL loop, no_sub, next
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00302 
+                      00303     CLRF    quo_dest            ; quo
+                      00304     CLRF    rem_dest            ; rem
+                      00305     MOVLW   8
+                      00306     MOVWF   cnt_dest            ; cnt = 8
+                      00307 
+                      00308 loop:
+                      00309     ; shift dividend bit into remainder (MSB-first)
+                      00310     BCF     STATUS, C       ; ensure 0 shifts into LSB
+                      00311     RLCF    divd, F
+                      00312     RLCF    rem_dest, F         ; rem <<= 1 | carry
+                      00313 
+                      00314     ; compare rem vs divsor (unsigned)
+                      00315     MOVF    divsor, W
+                      00316     SUBWF   rem_dest, W         ; C=1 if rem >= divsor
+                      00317     BTFSS   STATUS, C
+                      00318     GOTO    no_sub
+                      00319 
+                      00320     ; rem >= divsor → subtract, shift '1' into quotient
+                      00321     MOVF    divsor, W
+                      00322     SUBWF   rem_dest, F         ; rem -= divsor (leaves C=1)
+                      00323     RLCF    quo_dest, F         ; shift in 1 to quo
+                      00324     GOTO    next
+                      00325 
+                      00326 no_sub:
+                      00327     ; rem < divsor → shift '0' into quotient
+                      00328     BCF     STATUS, C
+                      00329     RLCF    quo_dest, F
+                      00330 
+                      00331 next:
+                      00332     DECFSZ  cnt_dest, F
+                      00333     GOTO    loop
                       00334 
-                      00335     ; rem >= divsor → subtract and shift '1' into quotient
-                      00336     MOVF    divsor, W
-                      00337     SUBWF   rem, F         ; leaves C=1 (no borrow)
-                      00338     RLCF    quoL, F        ; shift in C=1
-                      00339     RLCF    quoH, F
-                      00340     GOTO    _next
-                      00341 
-                      00342 _no_sub
-                      00343     ; rem < divsor → shift '0' into quotient
-                      00344     BCF     STATUS, C      ; << be explicit: shift 0
-                      00345     RLCF    quoL, F
-                      00346     RLCF    quoH, F
-                      00347 
-                      00348 _next
-                      00349     DECFSZ  cnt, F
-                      00350     GOTO    _loop
+                      00335     CLRF    cnt_dest
 Warning[205]: Found directive in column 1. (ENDM)
-                      00351 ENDM
+                      00336 ENDM
+                      00337 
+                      00338 ;; 16-bit ÷ 16-bit (unsigned, restoring division)
+                      00339 ;; (dH:dL) / (vH:vL) → quoH:quoL, remainder in rH:rL
+                      00340 ;; cnt is a scratch loop counter (clobbered)
+                      00341 ;; Clobbers: WREG, STATUS (C/Z)
+                      00342 ;; Assumes operands live in access RAM when using ,ACCESS
+                      00343 
+                      00344 DIV16U16_UNSIGNED MACRO dH,dL, vH,vL, quoH,quoL, rH,rL, cnt
+                      00345     LOCAL _ok, _loop, _ge, _lt, _next, _done, _divzero
+                      00346 
+                      00347     ; init outputs
+                      00348     CLRF    quoH, ACCESS
+                      00349     CLRF    quoL, ACCESS
+                      00350     CLRF    rH,   ACCESS
+                      00351     CLRF    rL,   ACCESS
                       00352 
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  8
+                      00353     ; handle divisor == 0 (policy: quotient=FFFFh, remainder=dividend)
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00353 ;; --- Template for recursion ---
-                      00354 ;RECUR_FUNC:
-                      00355 ;    ; base case
-                      00356 ;    <check condition>
-                      00357 ;    BZ  BASE_DONE
-                      00358 ;
-                      00359 ;    ; save current state
-                      00360 ;    MOVFF PARAM, TEMP
-                      00361 ;    <modify PARAM for recursive call>
-                      00362 ;
-                      00363 ;    CALL RECUR_FUNC       ; recursion
-                      00364 ;
-                      00365 ;    ; restore
-                      00366 ;    MOVFF TEMP, PARAM
-                      00367 ;    <combine result>
-                      00368 ;
-                      00369 ;BASE_DONE:
-                      00370 ;    RETURN
-                      00371 
-                      00372 ; =========================================================
-                      00373 ; GCD8 a, b, dest, t0
-                      00374 ; Computes gcd(a, b) for 8-bit unsigned values.
-                      00375 ; Result placed in 'dest'. Uses temp byte 't0'.
-                      00376 ; Does not require any other macros.
-                      00377 ; =========================================================
-                      00378 GCD8 MACRO a, b, dest, t0
-                      00379     LOCAL _start, _a_zero, _b_zero, _loop, _mod_try, _mod_done, _done
+                      00354     MOVF    vL, W, ACCESS
+                      00355     IORWF   vH, W, ACCESS
+                      00356     BNZ     _ok
+                      00357 _divzero
+                      00358     MOVLW   0xFF
+                      00359     MOVWF   quoH, ACCESS
+                      00360     MOVWF   quoL, ACCESS
+                      00361     MOVF    dL, W, ACCESS
+                      00362     MOVWF   rL, ACCESS
+                      00363     MOVF    dH, W, ACCESS
+                      00364     MOVWF   rH, ACCESS
+                      00365     GOTO    _done
+                      00366 
+                      00367 _ok
+                      00368     MOVLW   d'16'
+                      00369     MOVWF   cnt, ACCESS
+                      00370 
+                      00371 _loop
+                      00372     ; shift dividend left; C ends up = old bit15 of dividend
+                      00373     BCF     STATUS, C
+                      00374     RLCF    dL, F, ACCESS
+                      00375     RLCF    dH, F, ACCESS
+                      00376 
+                      00377     ; shift remainder left, bringing in that bit from C
+                      00378     RLCF    rL, F, ACCESS
+                      00379     RLCF    rH, F, ACCESS
                       00380 
-                      00381 _start
-                      00382     ; handle edge cases
-                      00383     MOVF    a, W
-                      00384     BZ      _a_zero
-                      00385     MOVF    b, W
-                      00386     BZ      _b_zero
-                      00387     GOTO    _loop
-                      00388 
-                      00389 _a_zero
-                      00390     MOVFF   b, dest
-                      00391     GOTO    _done
-                      00392 
-                      00393 _b_zero
-                      00394     MOVFF   a, dest
-                      00395     GOTO    _done
-                      00396 
-                      00397 ; Euclid loop:
-                      00398 ; while (b != 0) { t0 = a % b; a = b; b = t0; }
-                      00399 _loop
-                      00400     ; t0 = a % b  (repeated subtraction modulo)
-                      00401     MOVF    a, W
-                      00402     MOVWF   t0
-                      00403 
-                      00404 _mod_try
-                      00405     ; try t0 -= b; if borrow (C=0), undo and finish modulo
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE  9
+                      00381     ; compare (rH:rL) ? (vH:vL), leave r intact; final C=1 iff r>=v
+                      00382     MOVF    vL, W, ACCESS
+                      00383     SUBWF   rL, W, ACCESS           ; W = rL - vL, sets C
+                      00384     MOVF    vH, W, ACCESS
+                      00385     SUBWFB  rH, W, ACCESS           ; final C from full 16-bit compare
+                      00386 
+                      00387     ; branch BEFORE touching C
+                      00388     BTFSS   STATUS, C
+                      00389     GOTO    _lt
+                      00390 
+                      00391 _ge
+                      00392     ; C=1 → quotient bit = 1, then r -= v
+                      00393     RLCF    quoL, F, ACCESS
+                      00394     RLCF    quoH, F, ACCESS
+                      00395     MOVF    vL, W, ACCESS
+                      00396     SUBWF   rL, F, ACCESS
+                      00397     MOVF    vH, W, ACCESS
+                      00398     SUBWFB  rH, F, ACCESS
+                      00399     GOTO    _next
+                      00400 
+                      00401 _lt
+                      00402     ; C=0 → quotient bit = 0 (no subtract)
+                      00403     RLCF    quoL, F, ACCESS
+                      00404     RLCF    quoH, F, ACCESS
+                      00405 
+                      00406 _next
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00406     MOVF    b, W
-                      00407     SUBWF   t0, F          ; t0 = t0 - b
-                      00408     BTFSC   STATUS, C      ; if no borrow (t0 >= 0), keep subtracting
-                      00409     GOTO    _mod_try
-                      00410 
-                      00411     ; borrow occurred → undo last subtract, t0 is remainder
-                      00412     MOVF    b, W
-                      00413     ADDWF   t0, F          ; t0 += b (restore to positive remainder)
-                      00414 
-                      00415 _mod_done
-                      00416     ; a = b; b = t0
-                      00417     MOVFF   b, a
-                      00418     MOVFF   t0, b
-                      00419 
-                      00420     ; if b == 0 → done (gcd in a)
-                      00421     MOVF    b, W
-                      00422     BZ      _b_zero        ; reuse path: dest = a
-                      00423 
-                      00424     GOTO    _loop
-                      00425 
-                      00426 _done
+                      00407     DECFSZ  cnt, F, ACCESS
+                      00408     GOTO    _loop
+                      00409 
+                      00410 _done
 Warning[205]: Found directive in column 1. (ENDM)
-                      00427 ENDM
+                      00411 ENDM
+                      00412 
+                      00413 ;;; Integer sqrt via Newton's method (unsigned 16-bit)
+                      00414 ;; Input : nH:nL = N
+                      00415 ;; In/Out: xH:xL = initial guess on entry; floor(sqrt(N)) on return
+                      00416 ;; Scratch: qH:qL (N/x), rH:rL (unused remainder), tH:tL (next x),
+                      00417 ;;          iter (outer loop cap), cnt_div (divider loop counter)
+                      00418 SQRT16_NEWTON MACRO nH,nL, xH,xL, qH,qL, rH,rL, tH,tL, iter, cnt_div
+                      00419     LOCAL _seed_ok, _iter, _done
+                      00420 
+                      00421     ; N==0 → x=0
+                      00422     MOVF    nL, W, ACCESS
+                      00423     IORWF   nH, W, ACCESS
+                      00424     BNZ     _seed_ok
+                      00425     CLRF    xL, ACCESS
+                      00426     CLRF    xH, ACCESS
+                      00427     GOTO    _done
                       00428 
-                      00429 ; =========================================================
-                      00430 ; GCD16U_STEIN aL,aH, bL,bH, outL,outH,  tL,tH,  k, tmp
-                      00431 ; Computes gcd( (aH:aL), (bH:bL) ) → (outH:outL), unsigned.
-                      00432 ; Temps:
-                      00433 ;   tL:tH = work copy of B
-                      00434 ;   k     = common power-of-two count
-                      00435 ;   tmp   = 1-byte scratch for swapping
-                      00436 ; No other macro dependencies.
-                      00437 ; =========================================================
-                      00438 GCD16U_STEIN MACRO aL,aH, bL,bH, outL,outH, tL,tH, k, tmp
-                      00439     LOCAL _a_zero,_b_zero,_common,_make_a_odd,_gcd_loop,_t_even
-                      00440     LOCAL _cmp_swap,_do_swap,_sub,_done,_shift_back
-                      00441 
-                      00442     ; out = A, t = B
-                      00443     MOVFF   aL, outL
-                      00444     MOVFF   aH, outH
-                      00445     MOVFF   bL, tL
-                      00446     MOVFF   bH, tH
-                      00447 
-                      00448     ; if A == 0 → gcd = B
-                      00449     MOVF    outL, W
-                      00450     IORWF   outH, W
-                      00451     BZ      _a_zero
-                      00452 
-                      00453     ; if B == 0 → gcd = A
-                      00454     MOVF    tL, W
-                      00455     IORWF   tH, W
-                      00456     BZ      _b_zero
-                      00457 
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 10
+                      00429 _seed_ok
+                      00430     ; ensure x != 0 (avoid div-by-zero)
+                      00431     MOVF    xL, W, ACCESS
+                      00432     IORWF   xH, W, ACCESS
+                      00433     BNZ     $+4
+                      00434     MOVFF   nL, xL
+                      00435     MOVFF   nH, xH
+                      00436 
+                      00437     ; optional safety cap: ≤ 16 Newton steps
+                      00438     MOVLW   16
+                      00439     MOVWF   iter, ACCESS
+                      00440 
+                      00441 _iter
+                      00442     ; q = N / x
+                      00443     DIV16U16_UNSIGNED nH,nL, xH,xL, qH, qL, rH, rL, cnt_div
+                      00444 
+                      00445     ; t = (x + q) >> 1
+                      00446     MOVFF   xL, tL
+                      00447     MOVF    qL, W, ACCESS
+                      00448     ADDWF   tL, F, ACCESS
+                      00449     MOVFF   xH, tH
+                      00450     MOVF    qH, W, ACCESS
+                      00451     ADDWFC  tH, F, ACCESS
+                      00452     RRCF    tH, F, ACCESS
+                      00453     RRCF    tL, F, ACCESS
+                      00454 
+                      00455     ; stop if t == x
+                      00456     MOVF    tL, W, ACCESS
+                      00457     XORWF   xL, W, ACCESS
+                      00458     BNZ     $+6
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00458     ; k = 0 (common factors of 2)
-                      00459     CLRF    k
-                      00460 
-                      00461 _common
-                      00462     ; while A even AND B even: A>>=1; B>>=1; k++
-                      00463     BTFSC   outL, 0
-                      00464     GOTO    _make_a_odd
-                      00465     BTFSC   tL, 0
-                      00466     GOTO    _make_a_odd
-                      00467 
-                      00468     ; A >>= 1 (logical)
-                      00469     BCF     STATUS, C
-                      00470     RRCF    outH, F
-                      00471     RRCF    outL, F
-                      00472     ; B >>= 1 (logical)
-                      00473     BCF     STATUS, C
-                      00474     RRCF    tH, F
-                      00475     RRCF    tL, F
-                      00476     INCF    k, F
-                      00477     GOTO    _common
-                      00478 
-                      00479 _make_a_odd
-                      00480     ; make A odd: while A even, A >>= 1
-                      00481     BTFSC   outL, 0
-                      00482     GOTO    _gcd_loop
-                      00483     BCF     STATUS, C
-                      00484     RRCF    outH, F
-                      00485     RRCF    outL, F
-                      00486     GOTO    _make_a_odd
-                      00487 
-                      00488 _gcd_loop
-                      00489     ; if B == 0 → done (A is gcd)
-                      00490     MOVF    tL, W
-                      00491     IORWF   tH, W
-                      00492     BZ      _shift_back
-                      00493 
-                      00494 _t_even
-                      00495     ; while B even, B >>= 1
-                      00496     BTFSC   tL, 0
-                      00497     GOTO    _cmp_swap
-                      00498     BCF     STATUS, C
-                      00499     RRCF    tH, F
-                      00500     RRCF    tL, F
-                      00501     GOTO    _t_even
-                      00502 
-                      00503 _cmp_swap
-                      00504     ; if A > B, swap(A,B) so that B >= A
-                      00505     MOVF    tL, W
-                      00506     SUBWF   outL, W        ; W = outL - tL
-                      00507     MOVF    tH, W
-                      00508     SUBWFB  outH, W        ; C=1 → A >= B
-                      00509     BTFSC   STATUS, C
-                      00510     GOTO    _do_swap       ; swap if A >= B (safe also for equality)
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 11
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00511 
-                      00512     ; B = B - A
-                      00513 _sub
-                      00514     MOVF    outL, W
-                      00515     SUBWF   tL, F
-                      00516     MOVF    outH, W
-                      00517     SUBWFB  tH, F
-                      00518     GOTO    _gcd_loop
-                      00519 
-                      00520 _do_swap
-                      00521     ; swap outL <-> tL  (use tmp)
-                      00522     MOVFF   outL, tmp
-                      00523     MOVFF   tL,  outL
-                      00524     MOVFF   tmp, tL
-                      00525     ; swap outH <-> tH
-                      00526     MOVFF   outH, tmp
-                      00527     MOVFF   tH,  outH
-                      00528     MOVFF   tmp, tH
-                      00529     GOTO    _sub
-                      00530 
-                      00531 _shift_back
-                      00532     ; restore common factor: A <<= k
-                      00533     MOVF    k, W
-                      00534     BZ      _done
-                      00535     ; loop: while k-- > 0: A <<= 1
-                      00536     ; (logical left shift)
-                      00537     BCF     STATUS, C
-                      00538     RLCF    outL, F
-                      00539     RLCF    outH, F
-                      00540     DECF    k, F
-                      00541     GOTO    _shift_back
-                      00542 
-                      00543 _a_zero
-                      00544     ; gcd = B
-                      00545     MOVFF   tL, outL
-                      00546     MOVFF   tH, outH
-                      00547     GOTO    _done
-                      00548 
-                      00549 _b_zero
-                      00550     ; gcd = A already in out
-                      00551 _done
+                      00459     MOVF    tH, W, ACCESS
+                      00460     XORWF   xH, W, ACCESS
+                      00461     BZ      _done
+                      00462 
+                      00463     ; x = t
+                      00464     MOVFF   tL, xL
+                      00465     MOVFF   tH, xH
+                      00466 
+                      00467     ; loop guard (separate from divider!)
+                      00468     DECFSZ  iter, F, ACCESS
+                      00469     GOTO    _iter
+                      00470 
+                      00471 _done
 Warning[205]: Found directive in column 1. (ENDM)
-                      00552 ENDM
+                      00472 ENDM
+                      00473 
+                      00474 
+                      00475 
+                      00476 ; 16-bit ÷ 8-bit Unsigned (long division)
+                      00477 ; (divH:divL) / divsor  →  quoH:quoL, rem
+                      00478 DIV16U8_LONG MACRO divH, divL, divsor, quoH, quoL, rem, cnt
+                      00479     LOCAL _loop, _no_sub, _next
+                      00480 
+                      00481     CLRF    quoH
+                      00482     CLRF    quoL
+                      00483     CLRF    rem
+                      00484     MOVLW   d'9'
+                      00485     MOVWF   cnt
+                      00486 
+                      00487 _loop
+                      00488     ; --- shift dividend into remainder (MSB-first) ---
+                      00489     BCF     STATUS, C      ; << ensure 0 shifts into divL LSB
+                      00490     RLCF    divL, F
+                      00491     RLCF    divH, F
+                      00492     RLCF    rem, F         ; C now = old bit7 of rem (not used next)
+                      00493 
+                      00494     ; --- test rem >= divsor (unsigned) ---
+                      00495     MOVF    divsor, W
+                      00496     SUBWF   rem, W         ; C=1 if rem >= divsor
+                      00497     BTFSS   STATUS, C
+                      00498     GOTO    _no_sub
+                      00499 
+                      00500     ; rem >= divsor → subtract and shift '1' into quotient
+                      00501     MOVF    divsor, W
+                      00502     SUBWF   rem, F         ; leaves C=1 (no borrow)
+                      00503     RLCF    quoL, F        ; shift in C=1
+                      00504     RLCF    quoH, F
+                      00505     GOTO    _next
+                      00506 
+                      00507 _no_sub
+                      00508     ; rem < divsor → shift '0' into quotient
+                      00509     BCF     STATUS, C      ; << be explicit: shift 0
+                      00510     RLCF    quoL, F
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00511     RLCF    quoH, F
+                      00512 
+                      00513 _next
+                      00514     DECFSZ  cnt, F
+                      00515     GOTO    _loop
+Warning[205]: Found directive in column 1. (ENDM)
+                      00516 ENDM
+                      00517 
+                      00518 ;; --- Template for recursion ---
+                      00519 ;RECUR_FUNC:
+                      00520 ;    ; base case
+                      00521 ;    <check condition>
+                      00522 ;    BZ  BASE_DONE
+                      00523 ;
+                      00524 ;    ; save current state
+                      00525 ;    MOVFF PARAM, TEMP
+                      00526 ;    <modify PARAM for recursive call>
+                      00527 ;
+                      00528 ;    CALL RECUR_FUNC       ; recursion
+                      00529 ;
+                      00530 ;    ; restore
+                      00531 ;    MOVFF TEMP, PARAM
+                      00532 ;    <combine result>
+                      00533 ;
+                      00534 ;BASE_DONE:
+                      00535 ;    RETURN
+                      00536 
+                      00537 ; =========================================================
+                      00538 ; GCD8 a, b, dest, t0
+                      00539 ; Computes gcd(a, b) for 8-bit unsigned values.
+                      00540 ; Result placed in 'dest'. Uses temp byte 't0'.
+                      00541 ; Does not require any other macros.
+                      00542 ; =========================================================
+                      00543 GCD8 MACRO a, b, dest, t0
+                      00544     LOCAL _start, _a_zero, _b_zero, _loop, _mod_try, _mod_done, _done
+                      00545 
+                      00546 _start
+                      00547     ; handle edge cases
+                      00548     MOVF    a, W
+                      00549     BZ      _a_zero
+                      00550     MOVF    b, W
+                      00551     BZ      _b_zero
+                      00552     GOTO    _loop
                       00553 
-                      00554 
-                      00555 
-                      00556 ; =================== end of toolbelt.inc ===================
+                      00554 _a_zero
+                      00555     MOVFF   b, dest
+                      00556     GOTO    _done
                       00557 
-                      00558 
-                      00559 
+                      00558 _b_zero
+                      00559     MOVFF   a, dest
+                      00560     GOTO    _done
+                      00561 
+                      00562 ; Euclid loop:
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00563 ; while (b != 0) { t0 = a % b; a = b; b = t0; }
+                      00564 _loop
+                      00565     ; t0 = a % b  (repeated subtraction modulo)
+                      00566     MOVF    a, W
+                      00567     MOVWF   t0
+                      00568 
+                      00569 _mod_try
+                      00570     ; try t0 -= b; if borrow (C=0), undo and finish modulo
+                      00571     MOVF    b, W
+                      00572     SUBWF   t0, F          ; t0 = t0 - b
+                      00573     BTFSC   STATUS, C      ; if no borrow (t0 >= 0), keep subtracting
+                      00574     GOTO    _mod_try
+                      00575 
+                      00576     ; borrow occurred → undo last subtract, t0 is remainder
+                      00577     MOVF    b, W
+                      00578     ADDWF   t0, F          ; t0 += b (restore to positive remainder)
+                      00579 
+                      00580 _mod_done
+                      00581     ; a = b; b = t0
+                      00582     MOVFF   b, a
+                      00583     MOVFF   t0, b
+                      00584 
+                      00585     ; if b == 0 → done (gcd in a)
+                      00586     MOVF    b, W
+                      00587     BZ      _b_zero        ; reuse path: dest = a
+                      00588 
+                      00589     GOTO    _loop
+                      00590 
+                      00591 _done
+Warning[205]: Found directive in column 1. (ENDM)
+                      00592 ENDM
+                      00593 
+                      00594 ; =========================================================
+                      00595 ; GCD16U_STEIN aL,aH, bL,bH, outL,outH,  tL,tH,  k, tmp
+                      00596 ; Computes gcd( (aH:aL), (bH:bL) ) → (outH:outL), unsigned.
+                      00597 ; Temps:
+                      00598 ;   tL:tH = work copy of B
+                      00599 ;   k     = common power-of-two count
+                      00600 ;   tmp   = 1-byte scratch for swapping
+                      00601 ; No other macro dependencies.
+                      00602 ; =========================================================
+                      00603 GCD16U_STEIN MACRO aL,aH, bL,bH, outL,outH, tL,tH, k, tmp
+                      00604     LOCAL _a_zero,_b_zero,_common,_make_a_odd,_gcd_loop,_t_even
+                      00605     LOCAL _cmp_swap,_do_swap,_sub,_done,_shift_back
+                      00606 
+                      00607     ; out = A, t = B
+                      00608     MOVFF   aL, outL
+                      00609     MOVFF   aH, outH
+                      00610     MOVFF   bL, tL
+                      00611     MOVFF   bH, tH
+                      00612 
+                      00613     ; if A == 0 → gcd = B
+                      00614     MOVF    outL, W
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00615     IORWF   outH, W
+                      00616     BZ      _a_zero
+                      00617 
+                      00618     ; if B == 0 → gcd = A
+                      00619     MOVF    tL, W
+                      00620     IORWF   tH, W
+                      00621     BZ      _b_zero
+                      00622 
+                      00623     ; k = 0 (common factors of 2)
+                      00624     CLRF    k
+                      00625 
+                      00626 _common
+                      00627     ; while A even AND B even: A>>=1; B>>=1; k++
+                      00628     BTFSC   outL, 0
+                      00629     GOTO    _make_a_odd
+                      00630     BTFSC   tL, 0
+                      00631     GOTO    _make_a_odd
+                      00632 
+                      00633     ; A >>= 1 (logical)
+                      00634     BCF     STATUS, C
+                      00635     RRCF    outH, F
+                      00636     RRCF    outL, F
+                      00637     ; B >>= 1 (logical)
+                      00638     BCF     STATUS, C
+                      00639     RRCF    tH, F
+                      00640     RRCF    tL, F
+                      00641     INCF    k, F
+                      00642     GOTO    _common
+                      00643 
+                      00644 _make_a_odd
+                      00645     ; make A odd: while A even, A >>= 1
+                      00646     BTFSC   outL, 0
+                      00647     GOTO    _gcd_loop
+                      00648     BCF     STATUS, C
+                      00649     RRCF    outH, F
+                      00650     RRCF    outL, F
+                      00651     GOTO    _make_a_odd
+                      00652 
+                      00653 _gcd_loop
+                      00654     ; if B == 0 → done (A is gcd)
+                      00655     MOVF    tL, W
+                      00656     IORWF   tH, W
+                      00657     BZ      _shift_back
+                      00658 
+                      00659 _t_even
+                      00660     ; while B even, B >>= 1
+                      00661     BTFSC   tL, 0
+                      00662     GOTO    _cmp_swap
+                      00663     BCF     STATUS, C
+                      00664     RRCF    tH, F
+                      00665     RRCF    tL, F
+                      00666     GOTO    _t_even
+                      00667 
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00668 _cmp_swap
+                      00669     ; if A > B, swap(A,B) so that B >= A
+                      00670     MOVF    tL, W
+                      00671     SUBWF   outL, W        ; W = outL - tL
+                      00672     MOVF    tH, W
+                      00673     SUBWFB  outH, W        ; C=1 → A >= B
+                      00674     BTFSC   STATUS, C
+                      00675     GOTO    _do_swap       ; swap if A >= B (safe also for equality)
+                      00676 
+                      00677     ; B = B - A
+                      00678 _sub
+                      00679     MOVF    outL, W
+                      00680     SUBWF   tL, F
+                      00681     MOVF    outH, W
+                      00682     SUBWFB  tH, F
+                      00683     GOTO    _gcd_loop
+                      00684 
+                      00685 _do_swap
+                      00686     ; swap outL <-> tL  (use tmp)
+                      00687     MOVFF   outL, tmp
+                      00688     MOVFF   tL,  outL
+                      00689     MOVFF   tmp, tL
+                      00690     ; swap outH <-> tH
+                      00691     MOVFF   outH, tmp
+                      00692     MOVFF   tH,  outH
+                      00693     MOVFF   tmp, tH
+                      00694     GOTO    _sub
+                      00695 
+                      00696 _shift_back
+                      00697     ; restore common factor: A <<= k
+                      00698     MOVF    k, W
+                      00699     BZ      _done
+                      00700     ; loop: while k-- > 0: A <<= 1
+                      00701     ; (logical left shift)
+                      00702     BCF     STATUS, C
+                      00703     RLCF    outL, F
+                      00704     RLCF    outH, F
+                      00705     DECF    k, F
+                      00706     GOTO    _shift_back
+                      00707 
+                      00708 _a_zero
+                      00709     ; gcd = B
+                      00710     MOVFF   tL, outL
+                      00711     MOVFF   tH, outH
+                      00712     GOTO    _done
+                      00713 
+                      00714 _b_zero
+                      00715     ; gcd = A already in out
+                      00716 _done
+Warning[205]: Found directive in column 1. (ENDM)
+                      00717 ENDM
+                      00718 
+                      00719 ; =========================================================
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00720 ; Comparators
+                      00721 ; =========================================================
+                      00722 
+                      00723 ;---------------------------------------------------------
+                      00724 ; CMP16U  — set flags for unsigned a ? b
+                      00725 ;   Input: aL,aH, bL,bH
+                      00726 ;   Effect: final C = 1 iff a >= b ; final C = 0 iff a < b
+                      00727 ;           (Do NOT trust Z for equality)
+                      00728 ;---------------------------------------------------------
+                      00729 CMP16U MACRO aL,aH, bL,bH
+                      00730     MOVF    bL, W, ACCESS
+                      00731     SUBWF   aL, W, ACCESS       ; W = aL - bL, sets C/Z for low
+                      00732     MOVF    bH, W, ACCESS
+                      00733     SUBWFB  aH, W, ACCESS       ; W = aH - bH - !C ; final C is correct for 16-bit
+Warning[205]: Found directive in column 1. (ENDM)
+                      00734 ENDM
+                      00735 
+                      00736 ;---------------------------------------------------------
+                      00737 ; BR_LT16U label   — branch if a <  b   (unsigned)
+                      00738 ; BR_GE16U label   — branch if a >= b   (unsigned)
+                      00739 ;   Uses only C from the prior CMP16U
+                      00740 ;---------------------------------------------------------
+                      00741 BR_LT16U MACRO label
+                      00742     BTFSS   STATUS, C           ; C=0 ⇒ a<b
+                      00743     GOTO    label
+Warning[205]: Found directive in column 1. (ENDM)
+                      00744 ENDM
+                      00745 
+                      00746 BR_GE16U MACRO label
+                      00747     BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+                      00748     GOTO    label
+Warning[205]: Found directive in column 1. (ENDM)
+                      00749 ENDM
+                      00750 
+                      00751 ;---------------------------------------------------------
+                      00752 ; BR_EQ16U  aL,aH,bL,bH,label   — branch if a == b
+                      00753 ; BR_NE16U  aL,aH,bL,bH,label   — branch if a != b
+                      00754 ;   Uses CPFSEQ (does not touch STATUS) to test equality.
+                      00755 ;   Safe to call after CMP16U (doesn't clobber C).
+                      00756 ;---------------------------------------------------------
+                      00757 BR_EQ16U MACRO aL,aH, bL,bH, label
+                      00758     LOCAL _neq,_end
+                      00759     MOVF    aL, W, ACCESS
+                      00760     CPFSEQ  bL, ACCESS          ; skip next if equal
+                      00761     GOTO    _neq
+                      00762     MOVF    aH, W, ACCESS
+                      00763     CPFSEQ  bH, ACCESS
+                      00764     GOTO    _neq
+                      00765     GOTO    label               ; both bytes equal
+                      00766 _neq:
+                      00767 _end:
+Warning[205]: Found directive in column 1. (ENDM)
+                      00768 ENDM
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00769 
+                      00770 BR_NE16U MACRO aL,aH, bL,bH, label
+                      00771     LOCAL _ne,_end
+                      00772     MOVF    aL, W, ACCESS
+                      00773     CPFSEQ  bL, ACCESS
+                      00774     GOTO    _ne                 ; low differs
+                      00775     MOVF    aH, W, ACCESS
+                      00776     CPFSEQ  bH, ACCESS
+                      00777     GOTO    _ne                 ; high differs
+                      00778     GOTO    _end                ; equal → do not branch
+                      00779 _ne:
+                      00780     GOTO    label
+                      00781 _end:
+Warning[205]: Found directive in column 1. (ENDM)
+                      00782 ENDM
+                      00783 
+                      00784 ;---------------------------------------------------------
+                      00785 ; BR_GT16U  aL,aH,bL,bH,label   — branch if a > b
+                      00786 ;   Logic: (a>=b) AND (a!=b) without trusting Z.
+                      00787 ;   Keeps C from CMP16U and checks inequality via CPFSEQ.
+                      00788 ;---------------------------------------------------------
+                      00789 BR_GT16U MACRO aL,aH, bL,bH, label
+                      00790     LOCAL _maybe,_end,_ne
+                      00791     ; need a>=b first
+                      00792     BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+                      00793     GOTO    _maybe
+                      00794     GOTO    _end                ; a<b → no branch
+                      00795 
+                      00796 _maybe:
+                      00797     ; if a != b, then a>b (since we already know a>=b)
+                      00798     MOVF    aL, W, ACCESS
+                      00799     CPFSEQ  bL, ACCESS
+                      00800     GOTO    _ne
+                      00801     MOVF    aH, W, ACCESS
+                      00802     CPFSEQ  bH, ACCESS
+                      00803     GOTO    _ne                ; equal → not greater
+                      00804 
+                      00805     GOTO _end
+                      00806 _ne:
+                      00807     GOTO    label
+                      00808 _end:
+Warning[205]: Found directive in column 1. (ENDM)
+                      00809 ENDM
+                      00810 
+                      00811 
+                      00812 ; =================== sample usage ===================
+                      00813 ; ; Compare A(0x31:0x30) with B(0x33:0x32)
+                      00814 ; CMP16U  0x30,0x31, 0x32,0x33
+                      00815 ; BR_EQ16  equal_u
+                      00816 ; BR_LT16U less_u
+                      00817 ; ; else greater_u
+                      00818 ; GOTO    greater_u
+                      00819 
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00820 ; equal_u:
+                      00821 ;     ; a==b
+                      00822 ;     GOTO done
+                      00823 
+                      00824 ; less_u:
+                      00825 ;     ; a<b (unsigned)
+                      00826 ;     GOTO done
+                      00827 
+                      00828 ; greater_u:
+                      00829 ;     ; a>b (unsigned)
+                      00830 ; done:
+                      00831 
+                      00832 ; =================== end of toolbelt.inc ===================
                       00004 
                       00005   CONFIG OSC = INTIO67
                       00006   CONFIG WDT = OFF
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 12
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
                       00007   org 0x00
-Warning[207]: Found label after column 1. (i)
-  00000030            00008   i EQU 0x30
-Warning[207]: Found label after column 1. (j)
-  00000031            00009   j EQU 0x31
-Warning[207]: Found label after column 1. (limI)
-  00000032            00010   limI EQU 0x32
-Warning[207]: Found label after column 1. (limJ)
-  00000033            00011   limJ EQU 0x33
-Warning[207]: Found label after column 1. (sum)
-  00000034            00012   sum EQU 0x34
-                      00013 ;  LFSR 0, 0x000
-                      00014 ;  LFSR 1, 0x010
-000000 EF?? F???      00015   GOTO main
-                      00016 ;=============================  
-                      00017 ;=============================
+Warning[207]: Found label after column 1. (_startH)
+  00000000            00008   _startH EQU 0x00
+  00000001            00009 _startL EQU 0x01
+  00000002            00010 _endH EQU 0x02
+  00000003            00011 _endL EQU 0x03
+                      00012 ;  LFSR 0, 0x000
+                      00013 ;  LFSR 1, 0x010
+000000 EF?? F???      00014   GOTO main
+                      00015 ;=============================  
+                      00016 ;=============================
 Warning[207]: Found label after column 1. (bodyLbl)
-000004                00018   bodyLbl:
-                      00019 ;    MOVFF i, POSTINC0
-                      00020 ;    MOVFF j, POSTINC1
-000004 2A34           00021     INCF sum, f
-000006 0012           00022     RETURN
-                      00023   
-                      00024   #include "mul_extended.asm"
+000004                00017   bodyLbl:
+                      00018 ;    MOVFF i, POSTINC0
+                      00019 ;    MOVFF j, POSTINC1
+                      00020 ;    INCF sum, f
+                      00021 ;    RETURN
+                      00022   
+                      00023   #include "mul_extended.asm"
                       00001 ;;=================================
                       00002 ;    Usage: 
                       00003 ;; main:
@@ -688,13 +994,19 @@ Warning[207]: Found label after column 1. (bodyLbl)
                       00009 ;    RCALL mul_extended
                       00010 ;;=================================
                       00011 
-000008                00012 mul_extended:
+000004                00012 mul_extended:
 Warning[207]: Found label after column 1. (nL)
   00000010            00013     nL EQU 0x10
 Warning[207]: Found label after column 1. (nH)
   00000011            00014     nH EQU 0x11
 Warning[207]: Found label after column 1. (mL)
   00000012            00015     mL EQU 0x12
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
 Warning[207]: Found label after column 1. (mH)
   00000013            00016     mH EQU 0x13
 Warning[207]: Found label after column 1. (dest1)
@@ -706,12 +1018,6 @@ Warning[207]: Found label after column 1. (dest3)
 Warning[207]: Found label after column 1. (dest4)
   00000004            00020     dest4 EQU 0x004
                       00021     ; MOVFF 0x001, nL ;nL
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 13
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
                       00022     ; MOVFF 0x002, nH ;nH
                       00023     ; MOVFF 0x003, mL ;mL
                       00024     ; MOVFF 0x004, mH ;mH
@@ -720,238 +1026,158 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00027     ;; mH(0x13), mL(0x12)
                       00028     ;;out:   Large -->  Small
                       00029     ;;out: 0x004 0x003 0x002 0x001
-000008 6A01           00030     CLRF dest1
-00000A 6A02           00031     CLRF dest2
-00000C 6A03           00032     CLRF dest3
-00000E 6A04           00033     CLRF dest4
+000004 6A01           00030     CLRF dest1
+000006 6A02           00031     CLRF dest2
+000008 6A03           00032     CLRF dest3
+00000A 6A04           00033     CLRF dest4
 Warning[207]: Found label after column 1. (nL_mL)
-000010                00034     nL_mL:
-000010 5010           00035         MOVF nL, w
-000012 0212           00036         MULWF mL
+00000C                00034     nL_mL:
+00000C 5010           00035         MOVF nL, w
+00000E 0212           00036         MULWF mL
                       00037         
-000014 50F3           00038         MOVF PRODL, W
-000016 2601           00039         ADDWF dest1, 1
-000018 50F4           00040         MOVF PRODH, W
-00001A 2602           00041         ADDWF dest2, 1
+000010 50F3           00038         MOVF PRODL, W
+000012 2601           00039         ADDWF dest1, 1
+000014 50F4           00040         MOVF PRODH, W
+000016 2602           00041         ADDWF dest2, 1
 Warning[207]: Found label after column 1. (nH_mL)
-00001C                00042     nH_mL:
-00001C 5011           00043         MOVF nH, w
-00001E 0212           00044         MULWF mL
+000018                00042     nH_mL:
+000018 5011           00043         MOVF nH, w
+00001A 0212           00044         MULWF mL
                       00045         
-000020 50F3           00046         MOVF PRODL, W
-000022 2602           00047         ADDWF dest2, 1
-000024 50F4           00048         MOVF PRODH, W
-000026 2203           00049         ADDWFC dest3, 1
+00001C 50F3           00046         MOVF PRODL, W
+00001E 2602           00047         ADDWF dest2, 1
+000020 50F4           00048         MOVF PRODH, W
+000022 2203           00049         ADDWFC dest3, 1
 Warning[207]: Found label after column 1. (nL_mH)
-000028                00050     nL_mH:
-000028 5010           00051         MOVF nL, w
-00002A 0213           00052         MULWF mH
+000024                00050     nL_mH:
+000024 5010           00051         MOVF nL, w
+000026 0213           00052         MULWF mH
                       00053         
-00002C 50F3           00054         MOVF PRODL, W
-00002E 2602           00055         ADDWF dest2, 1
-000030 50F4           00056         MOVF PRODH, W
-000032 2203           00057         ADDWFC dest3, 1
+000028 50F3           00054         MOVF PRODL, W
+00002A 2602           00055         ADDWF dest2, 1
+00002C 50F4           00056         MOVF PRODH, W
+00002E 2203           00057         ADDWFC dest3, 1
 Warning[207]: Found label after column 1. (nH_mH)
-000034                00058     nH_mH:
-000034 5011           00059         MOVF nH, w
-000036 0213           00060         MULWF mH
+000030                00058     nH_mH:
+000030 5011           00059         MOVF nH, w
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000032 0213           00060         MULWF mH
                       00061         
-000038 50F3           00062         MOVF PRODL, W
-00003A 2603           00063         ADDWF dest3, 1
-00003C 50F4           00064         MOVF PRODH, W
-00003E 2204           00065         ADDWFC dest4, 1
+000034 50F3           00062         MOVF PRODL, W
+000036 2603           00063         ADDWF dest3, 1
+000038 50F4           00064         MOVF PRODH, W
+00003A 2204           00065         ADDWFC dest4, 1
                       00066 
 Warning[207]: Found label after column 1. (STEP2)
-000040                00067     STEP2:
+00003C                00067     STEP2:
                       00068         ; if op1(nH(0x11), nL(0x10)) is negative, subtrasct op2 from upper byte
-000040 AE11           00069         BTFSS nH, 7 ;is nH is negative
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 14
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000042 EF?? F???      00070         GOTO STEP3
+00003C AE11           00069         BTFSS nH, 7 ;is nH is negative
+00003E EF?? F???      00070         GOTO STEP3
                       00071         
                       00072         ;upper byte = 0x04, 0x03
-000046 5012           00073         MOVF mL, w
-000048 5E03           00074         SUBWF dest3
-00004A 5013           00075         MOVF mH, w
-00004C 5A04           00076         SUBWFB dest4
+000042 5012           00073         MOVF mL, w
+000044 5E03           00074         SUBWF dest3
+000046 5013           00075         MOVF mH, w
+000048 5A04           00076         SUBWFB dest4
                       00077         
 Warning[207]: Found label after column 1. (STEP3)
-00004E                00078     STEP3:
+00004A                00078     STEP3:
                       00079         ; if op2(mH(0x13), mL(0x12)) is negative, subtrasct op1 from upper byte
-00004E AE13           00080         BTFSS mH, 7 ;mH is negative
-000050 EF?? F???      00081         GOTO finish
+00004A AE13           00080         BTFSS mH, 7 ;mH is negative
+00004C EF?? F???      00081         GOTO finish
                       00082         
-000054 5010           00083         MOVF nL, w
-000056 5E03           00084         SUBWF dest3
-000058 5011           00085         MOVF nH, w
-00005A 5A04           00086         SUBWFB dest4
+000050 5010           00083         MOVF nL, w
+000052 5E03           00084         SUBWF dest3
+000054 5011           00085         MOVF nH, w
+000056 5A04           00086         SUBWFB dest4
                       00087         
 Warning[207]: Found label after column 1. (finish)
-00005C                00088     finish:
-                      00025 ;  #include "bubble_sort"
-                      00026 ;=============================
-                      00027 ; MAIN PROGRAM
-                      00028 ;=============================
-00005C                00029 main:
-                      00030   ; ====== Prepare three source lists ======
-                      00031   MOVLF 0x90, 0x00
-00005C 0E90               M         MOVLW   0x90
-00005E 6E00               M         MOVWF   0x00, ACCESS
-                      00032   MOVLF 0x00, 0x01
-000060 0E00               M         MOVLW   0x00
-000062 6E01               M         MOVWF   0x01, ACCESS
-                      00033   MOVLF 0x0C, 0x02
-000064 0E0C               M         MOVLW   0x0C
-000066 6E02               M         MOVWF   0x02, ACCESS
-                      00034   MOVLF 0x00, 0x03
-000068 0E00               M         MOVLW   0x00
-00006A 6E03               M         MOVWF   0x03, ACCESS
-                      00035   
-                      00036   ; ====== Sort merged data ======
-                      00037   
-                      00038 ;  DIV16U8 0x10, 0x11, 0x12, 0x20, 0x21, 0x30, 0x31
-                      00039 ;  MAC16_8x8 0x12, 0x12, 0x20, 0x21
-                      00040 ;  FOR8 0x00, 0x0A, something
-                      00041   GCD16U_STEIN 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
-  0000                    M     LOCAL _a_zero,_b_zero,_common,_make_a_odd,_gcd_loop,_t_even
-  0000                    M     LOCAL _cmp_swap,_do_swap,_sub,_done,_shift_back
-                          M 
-                          M     ; out = A, t = B
-00006C C001 F004          M     MOVFF   0x01, 0x04
-000070 C000 F005          M     MOVFF   0x00, 0x05
-000074 C002 F006          M     MOVFF   0x02, 0x06
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 15
+000058                00088     finish:
+                      00024 ;  #include "bubble_sort"
+                      00025 ;=============================
+                      00026 ; MAIN PROGRAM
+                      00027 ;=============================
+000058                00028 main:
+                      00029   ; ====== Prepare three source lists ======
+                      00030   MOVLF 0x90, 0x00
+000058 0E90               M         MOVLW   0x90
+00005A 6E00               M         MOVWF   0x00, ACCESS
+                      00031   MOVLF 0x00, 0x01
+00005C 0E00               M         MOVLW   0x00
+00005E 6E01               M         MOVWF   0x01, ACCESS
+                      00032   MOVLF 0x0C, 0x02
+000060 0E0C               M         MOVLW   0x0C
+000062 6E02               M         MOVWF   0x02, ACCESS
+                      00033   MOVLF 0x00, 0x03
+000064 0E00               M         MOVLW   0x00
+000066 6E03               M         MOVWF   0x03, ACCESS
+                      00034   
+                      00035   ; ====== Sort merged data ======
+                      00036   
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 20
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-000078 C003 F007          M     MOVFF   0x03, 0x07
+                      00037 ;  DIV16U8 0x10, 0x11, 0x12, 0x20, 0x21, 0x30, 0x31
+                      00038 ;  MAC16_8x8 0x12, 0x12, 0x20, 0x21
+                      00039 ;  FOR8 0x00, 0x0A, something
+                      00040 ;  GCD16U_STEIN 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
+Warning[207]: Found label after column 1. (_finish)
+000068                00041   _finish:
+000068 0000           00042     NOP
+                      00043   MOVLF 0x00, _startH
+00006A 0E00               M         MOVLW   0x00
+00006C 6E00               M         MOVWF   _startH, ACCESS
+Warning[206]: Found call to macro in column 1. (MOVLF)
+                      00044 MOVLF 0x03, _startL
+00006E 0E03               M         MOVLW   0x03
+000070 6E01               M         MOVWF   _startL, ACCESS
+Warning[206]: Found call to macro in column 1. (MOVLF)
+                      00045 MOVLF 0x00, _endH
+000072 0E00               M         MOVLW   0x00
+000074 6E02               M         MOVWF   _endH, ACCESS
+Warning[206]: Found call to macro in column 1. (MOVLF)
+                      00046 MOVLF 0x03, _endL
+000076 0E03               M         MOVLW   0x03
+000078 6E03               M         MOVWF   _endL, ACCESS
+                      00047   CMP16U   _startL, _startH, _endL, _endH
+00007A 5003               M     MOVF    _endL, W, ACCESS
+00007C 5C01               M     SUBWF   _startL, W, ACCESS  ; W = aL - bL, sets C/Z for low
+00007E 5002               M     MOVF    _endH, W, ACCESS
+000080 5800               M     SUBWFB  _startH, W, ACCESS  ; W = aH - bH - !C ; final C is correct for 16-bit
+                      00048     BR_GT16U _startL, _startH, _endL, _endH, _finish
+  0000                    M     LOCAL _maybe,_end,_ne
+                          M     ; need a>=b first
+000082 B0D8               M     BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+000084 EF?? F???          M     GOTO    _maybe
+000088 EF?? F???          M     GOTO    _end                ; a<b → no branch
                           M 
-                          M     ; if A == 0 → gcd = B
-00007C 5004               M     MOVF    0x04, W
-00007E 1005               M     IORWF   0x05, W
-000080 E0??               M     BZ      _a_zero
+00008C                    M _maybe:
+                          M     ; if a != b, then a>b (since we already know a>=b)
+00008C 5001               M     MOVF    _startL, W, ACCESS
+00008E 6203               M     CPFSEQ  _endL, ACCESS
+000090 EF?? F???          M     GOTO    _ne
+000094 5000               M     MOVF    _startH, W, ACCESS
+000096 6202               M     CPFSEQ  _endH, ACCESS
+000098 EF?? F???          M     GOTO    _ne                ; equal → not greater
                           M 
-                          M     ; if B == 0 → gcd = A
-000082 5006               M     MOVF    0x06, W
-000084 1007               M     IORWF   0x07, W
-000086 E0??               M     BZ      _b_zero
-                          M 
-                          M     ; k = 0 (common factors of 2)
-000088 6A08               M     CLRF    0x08
-                          M 
-00008A                    M _common
-                          M     ; while A even AND B even: A>>=1; B>>=1; k++
-00008A B004               M     BTFSC   0x04, 0
-00008C EF?? F???          M     GOTO    _make_a_odd
-000090 B006               M     BTFSC   0x06, 0
-000092 EF?? F???          M     GOTO    _make_a_odd
-                          M 
-                          M     ; A >>= 1 (logical)
-000096 90D8               M     BCF     STATUS, C
-000098 3205               M     RRCF    0x05, F
-00009A 3204               M     RRCF    0x04, F
-                          M     ; B >>= 1 (logical)
-00009C 90D8               M     BCF     STATUS, C
-00009E 3207               M     RRCF    0x07, F
-0000A0 3206               M     RRCF    0x06, F
-0000A2 2A08               M     INCF    0x08, F
-0000A4 EF?? F???          M     GOTO    _common
-                          M 
-0000A8                    M _make_a_odd
-                          M     ; make A odd: while A even, A >>= 1
-0000A8 B004               M     BTFSC   0x04, 0
-0000AA EF?? F???          M     GOTO    _gcd_loop
-0000AE 90D8               M     BCF     STATUS, C
-0000B0 3205               M     RRCF    0x05, F
-0000B2 3204               M     RRCF    0x04, F
-0000B4 EF?? F???          M     GOTO    _make_a_odd
-                          M 
-0000B8                    M _gcd_loop
-                          M     ; if B == 0 → done (A is gcd)
-0000B8 5006               M     MOVF    0x06, W
-0000BA 1007               M     IORWF   0x07, W
-0000BC E0??               M     BZ      _shift_back
-                          M 
-0000BE                    M _t_even
-                          M     ; while B even, B >>= 1
-0000BE B006               M     BTFSC   0x06, 0
-0000C0 EF?? F???          M     GOTO    _cmp_swap
-0000C4 90D8               M     BCF     STATUS, C
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 16
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0000C6 3207               M     RRCF    0x07, F
-0000C8 3206               M     RRCF    0x06, F
-0000CA EF?? F???          M     GOTO    _t_even
-                          M 
-0000CE                    M _cmp_swap
-                          M     ; if A > B, swap(A,B) so that B >= A
-0000CE 5006               M     MOVF    0x06, W
-0000D0 5C04               M     SUBWF   0x04, W        ; W = outL - tL
-0000D2 5007               M     MOVF    0x07, W
-0000D4 5805               M     SUBWFB  0x05, W        ; C=1 → A >= B
-0000D6 B0D8               M     BTFSC   STATUS, C
-0000D8 EF?? F???          M     GOTO    _do_swap       ; swap if A >= B (safe also for equality)
-                          M 
-                          M     ; B = B - A
-0000DC                    M _sub
-0000DC 5004               M     MOVF    0x04, W
-0000DE 5E06               M     SUBWF   0x06, F
-0000E0 5005               M     MOVF    0x05, W
-0000E2 5A07               M     SUBWFB  0x07, F
-0000E4 EF?? F???          M     GOTO    _gcd_loop
-                          M 
-0000E8                    M _do_swap
-                          M     ; swap outL <-> tL  (use tmp)
-0000E8 C004 F009          M     MOVFF   0x04, 0x09
-0000EC C006 F004          M     MOVFF   0x06,  0x04
-0000F0 C009 F006          M     MOVFF   0x09, 0x06
-                          M     ; swap outH <-> tH
-0000F4 C005 F009          M     MOVFF   0x05, 0x09
-0000F8 C007 F005          M     MOVFF   0x07,  0x05
-0000FC C009 F007          M     MOVFF   0x09, 0x07
-000100 EF?? F???          M     GOTO    _sub
-                          M 
-000104                    M _shift_back
-                          M     ; restore common factor: A <<= k
-000104 5008               M     MOVF    0x08, W
-000106 E0??               M     BZ      _done
-                          M     ; loop: while k-- > 0: A <<= 1
-                          M     ; (logical left shift)
-000108 90D8               M     BCF     STATUS, C
-00010A 3604               M     RLCF    0x04, F
-00010C 3605               M     RLCF    0x05, F
-00010E 0608               M     DECF    0x08, F
-000110 EF?? F???          M     GOTO    _shift_back
-                          M 
-000114                    M _a_zero
-                          M     ; gcd = B
-000114 C006 F004          M     MOVFF   0x06, 0x04
-000118 C007 F005          M     MOVFF   0x07, 0x05
-00011C EF?? F???          M     GOTO    _done
-                          M 
-000120                    M _b_zero
-                          M     ; gcd = A already in out
-000120                    M _done
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 17
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00042 ;  FOR2D_REG i, j, limI, limJ, bodyLbl
-000120 0000           00043   NOP
-                      00044   END
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 18
+00009C EF?? F???          M     GOTO _end
+0000A0                    M _ne:
+0000A0 EF?? F???          M     GOTO    _finish
+0000A4                    M _end:
+                      00049     
+                      00050 
+                      00051 
+0000A4 0000           00052   NOP
+                      00053   END
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 21
 
 
 SYMBOL TABLE
@@ -974,6 +1200,7 @@ ADCS0                             00000000
 ADCS1                             00000001
 ADCS2                             00000002
 ADD16                             
+ADD16_TO                          
 ADDEN                             00000003
 ADEN                              00000003
 ADFM                              00000007
@@ -1009,17 +1236,22 @@ BAUDCTL                           00000FB8
 BCLIE                             00000003
 BCLIF                             00000003
 BCLIP                             00000003
-BF                                00000000
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 19
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 22
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+BF                                00000000
 BGST                              00000005
 BOR                               00000000
 BRG16                             00000003
 BRGH                              00000002
+BR_EQ16U                          
+BR_GE16U                          
+BR_GT16U                          
+BR_LT16U                          
+BR_NE16U                          
 BSR                               00000FE0
 C                                 00000000
 C1INV                             00000004
@@ -1063,18 +1295,18 @@ CHS1                              00000003
 CHS2                              00000004
 CHS3                              00000005
 CIS                               00000003
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 CK                                00000006
 CKE                               00000006
 CKP                               00000004
 CLKI                              00000007
 CLKO                              00000006
 CLRBIT                            
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 20
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 CM0                               00000000
 CM1                               00000001
 CM2                               00000002
@@ -1083,6 +1315,7 @@ CMIE                              00000006
 CMIF                              00000006
 CMIP                              00000006
 CMP16                             
+CMP16U                            
 CREN                              00000004
 CS                                00000002
 CSRC                              00000007
@@ -1108,6 +1341,7 @@ DDRC                              TRISC
 DDRD                              TRISD
 DDRE                              TRISE
 DEC16                             
+DIV16U16_UNSIGNED                 
 DIV16U8                           
 DIV16U8_LONG                      
 DONE                              00000001
@@ -1120,6 +1354,12 @@ ECCPAS0                           00000004
 ECCPAS1                           00000005
 ECCPAS2                           00000006
 ECCPASE                           00000007
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 EEADR                             00000FA9
 EECON1                            00000FA6
 EECON2                            00000FA7
@@ -1128,12 +1368,6 @@ EEIE                              00000004
 EEIF                              00000004
 EEIP                              00000004
 EEPGD                             00000007
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 21
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 FAST                              00000001
 FERR                              00000002
 FLT0                              00000000
@@ -1179,6 +1413,12 @@ INC16
 INDF0                             00000FEF
 INDF1                             00000FE7
 INDF2                             00000FDF
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 25
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 INT0                              00000000
 INT0E                             00000004
 INT0F                             00000001
@@ -1187,12 +1427,6 @@ INT0IF                            00000001
 INT1                              00000001
 INT1E                             00000003
 INT1F                             00000000
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 22
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 INT1IE                            00000003
 INT1IF                            00000000
 INT1IP                            00000006
@@ -1238,6 +1472,12 @@ LATB0                             00000000
 LATB1                             00000001
 LATB2                             00000002
 LATB3                             00000003
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 26
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 LATB4                             00000004
 LATB5                             00000005
 LATB6                             00000006
@@ -1246,12 +1486,6 @@ LATC                              00000F8B
 LATC0                             00000000
 LATC1                             00000001
 LATC2                             00000002
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 23
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 LATC3                             00000003
 LATC4                             00000004
 LATC5                             00000005
@@ -1297,6 +1531,12 @@ NOT_BOR                           00000000
 NOT_CS                            00000002
 NOT_DONE                          00000001
 NOT_MCLR                          00000003
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 27
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 NOT_PD                            00000002
 NOT_POR                           00000001
 NOT_RBPU                          00000007
@@ -1305,12 +1545,6 @@ NOT_RI                            00000004
 NOT_SS                            00000005
 NOT_T1SYNC                        00000002
 NOT_T3SYNC                        00000002
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 24
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 NOT_TO                            00000003
 NOT_W                             00000002
 NOT_WR                            00000001
@@ -1356,6 +1590,12 @@ PEN                               00000002
 PGC                               00000006
 PGD                               00000007
 PGM                               00000005
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 28
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 PIE1                              00000F9D
 PIE2                              00000FA0
 PIR1                              00000F9E
@@ -1364,12 +1604,6 @@ PLLEN                             00000006
 PLUSW0                            00000FEB
 PLUSW1                            00000FE3
 PLUSW2                            00000FDB
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 25
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 POR                               00000001
 PORTA                             00000F80
 PORTB                             00000F81
@@ -1415,6 +1649,12 @@ RA2                               00000002
 RA3                               00000003
 RA4                               00000004
 RA5                               00000005
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 29
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 RA6                               00000006
 RA7                               00000007
 RB0                               00000000
@@ -1423,12 +1663,6 @@ RB2                               00000002
 RB3                               00000003
 RB4                               00000004
 RB5                               00000005
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 26
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 RB6                               00000006
 RB7                               00000007
 RBIE                              00000003
@@ -1474,6 +1708,12 @@ RX9D                              00000000
 RXDTP                             00000005
 R_NOT_W                           00000002
 R_W                               00000002
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 30
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 S                                 00000003
 SBOREN                            00000006
 SCK                               00000003
@@ -1482,12 +1722,6 @@ SCL                               00000003
 SCS0                              00000000
 SCS1                              00000001
 SDA                               00000004
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 27
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 SDI                               00000004
 SDO                               00000005
 SEN                               00000000
@@ -1502,6 +1736,7 @@ SP4                               00000004
 SPBRG                             00000FAF
 SPBRGH                            00000FB0
 SPEN                              00000007
+SQRT16_NEWTON                     
 SREN                              00000005
 SS                                00000005
 SSPADD                            00000FC8
@@ -1519,18 +1754,25 @@ SSPM3                             00000003
 SSPOV                             00000006
 SSPSTAT                           00000FC7
 STATUS                            00000FD8
-STEP2                             00000040
-STEP3                             0000004E
+STEP2                             0000003C
+STEP3                             0000004A
 STKFUL                            00000007
 STKOVF                            00000007
 STKPTR                            00000FFC
 STKUNF                            00000006
 SUB16                             
+SUB16_TO                          
 SWDTE                             00000000
 SWDTEN                            00000000
 SYNC                              00000004
 T016BIT                           00000006
 T08BIT                            00000006
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 31
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 T0CKI                             00000004
 T0CON                             00000FD5
 T0CS                              00000005
@@ -1541,12 +1783,6 @@ T0PS1                             00000001
 T0PS2                             00000002
 T0PS3                             00000003
 T0SE                              00000004
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 28
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 T13CKI                            00000000
 T1CKI                             00000000
 T1CKPS0                           00000004
@@ -1590,6 +1826,12 @@ TMR1IF                            00000000
 TMR1IP                            00000000
 TMR1L                             00000FCE
 TMR1ON                            00000000
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 TMR2                              00000FCC
 TMR2IE                            00000001
 TMR2IF                            00000001
@@ -1600,12 +1842,6 @@ TMR3CS                            00000001
 TMR3H                             00000FB3
 TMR3IE                            00000001
 TMR3IF                            00000001
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 29
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 TMR3IP                            00000001
 TMR3L                             00000FB2
 TMR3ON                            00000000
@@ -1649,6 +1885,12 @@ TRISD                             00000F95
 TRISD0                            00000000
 TRISD1                            00000001
 TRISD2                            00000002
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 TRISD3                            00000003
 TRISD4                            00000004
 TRISD5                            00000005
@@ -1659,12 +1901,6 @@ TRISE0                            00000000
 TRISE1                            00000001
 TRISE2                            00000002
 TRMT                              00000001
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 30
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 TUN0                              00000000
 TUN1                              00000001
 TUN2                              00000002
@@ -1708,6 +1944,12 @@ _BORV_3_2L                        000000FF
 _CCP2MX_PORTBE_3H                 000000FE
 _CCP2MX_PORTC_3H                  000000FF
 _CONFIG1H                         00300001
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _CONFIG2H                         00300003
 _CONFIG2L                         00300002
 _CONFIG3H                         00300005
@@ -1718,12 +1960,6 @@ _CONFIG6H                         0030000B
 _CONFIG6L                         0030000A
 _CONFIG7H                         0030000D
 _CONFIG7L                         0030000C
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 31
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _CP0_OFF_5L                       000000FF
 _CP0_ON_5L                        000000FE
 _CP1_OFF_5L                       000000FF
@@ -1767,6 +2003,12 @@ _LPT1OSC_ON_3H                    000000FF
 _LVP_OFF_4L                       000000FB
 _LVP_ON_4L                        000000FF
 _MCLRE_OFF_3H                     0000007F
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _MCLRE_ON_3H                      000000FF
 _OSC_ECIO6_1H                     000000F5
 _OSC_EC_1H                        000000F4
@@ -1777,12 +2019,6 @@ _OSC_INTIO7_1H                    000000F9
 _OSC_LP_1H                        000000F0
 _OSC_RCIO6_1H                     000000F7
 _OSC_RC_1H                        000000F3
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 32
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _OSC_XT_1H                        000000F1
 _PBADEN_OFF_3H                    000000FD
 _PBADEN_ON_3H                     000000FF
@@ -1826,38 +2062,38 @@ _XINST_OFF_4L                     000000BF
 _XINST_ON_4L                      000000FF
 __18F4520                         00000001
 __DEBUG                           
+MPASM 5.84                    PLAYGROUND.ASM   10-22-2025  16:32:18         PAGE 36
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 __MPLAB_DEBUGGER_SIMULATOR        1
+_endH                             00000002
+_endL                             00000003
+_finish                           00000068
+_startH                           00000000
+_startL                           00000001
 bodyLbl                           00000004
 dest1                             00000001
 dest2                             00000002
 dest3                             00000003
 dest4                             00000004
 div_8_8                           
-finish                            0000005C
-i                                 00000030
-j                                 00000031
-MPASM 5.84                    PLAYGROUND.ASM   10-21-2025  22:32:53         PAGE 33
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
-limI                              00000032
-limJ                              00000033
+finish                            00000058
 mH                                00000013
 mL                                00000012
-main                              0000005C
-mul_extended                      00000008
+main                              00000058
+mul_extended                      00000004
 nH                                00000011
-nH_mH                             00000034
-nH_mL                             0000001C
+nH_mH                             00000030
+nH_mL                             00000018
 nL                                00000010
-nL_mH                             00000028
-nL_mL                             00000010
-sum                               00000034
+nL_mH                             00000024
+nL_mL                             0000000C
 
 Errors   :     0
-Warnings :    29 reported,     0 suppressed
+Warnings :    37 reported,     0 suppressed
 Messages :     0 reported,     0 suppressed
 
 

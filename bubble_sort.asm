@@ -29,7 +29,7 @@
 ;=============================
 ; VARIABLES
 ;=============================
-;;cblock endc
+    
  max EQU 0x30
  baseL EQU 0x31
  len EQU 0x32
@@ -48,6 +48,7 @@ bubble_sort:
     MOVFF   BSR, bsr_tmp
     CLRF    BSR                 ; keep direct addressing consistent
 
+    MOVLB 0x02
     ; ---- Trivial cases: len <= 1 ----
     MOVF    len, W, ACCESS
     BZ      bs_restore
