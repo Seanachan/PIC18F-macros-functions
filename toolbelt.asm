@@ -25,11 +25,41 @@ ADD16    MACRO dL,dH,sL,sH
         MOVF    sH,W
         ADDWFC  dH,F
         ENDM
-SUB16    MACRO dL,dH,sL,sH
+
+ADD16_TO MACRO aL,aH, bL,bH, rL,rH
+        ; rL = aL + bL
+        MOVFF   aL, rL
+        MOVF    bL, W
+        ADDWF   rL, F
+
+        ; rH = aH + bH + carry
+        MOVFF   aH, rH
+        MOVF    bH, W
+        ADDWFC  rH, F
+        ENDM
+
+SUB16    MACRO dL,dH,sL,sH ;d -= s
         MOVF    sL,W
         SUBWF   dL,F
         MOVF    sH,W
         SUBWFB  dH,F
+        ENDM
+
+SUB16_TO    MACRO dL,dH,sL,sH, rL, rH ;r = d - s
+        ; rL = dL - sL
+        MOVFF   dL, rL
+        MOVF    sL, W
+        SUBWF   rL, F
+        ; BTFSS STATUS, C  ;for not using SUBWFB
+        ; MOVLF 0x01, 0x40
+
+        ; rH = dH - sH - borrow
+        MOVFF   dH, rH
+        MOVF    sH, W
+        SUBWF  rH, F
+
+        ; BTFSC    0x40, 0
+        ; DECF rH
         ENDM
 CMP16    MACRO aL,aH,bL,bH     ; sets C/Z from (a-b) without changing a
         LOCAL   _c1,_c2
@@ -112,6 +142,38 @@ _lge    MOVF    div,W
 _lnx    DECFSZ  cnt,F
         GOTO    _l
         ENDM
+
+; ======= 16/8 unsigned long-division (remainder + quotient) =======
+; (divH:divL) / divsor  →  quoH:quoL, rem
+DIV16U8_LONG MACRO divH, divL, divsor, quoH, quoL, rem, cnt
+    LOCAL _loop, _no_sub, _next
+    CLRF    quoH
+    CLRF    quoL
+    CLRF    rem
+    MOVLW   16
+    MOVWF   cnt
+_loop:
+    BCF     STATUS, C
+    RLCF    divL, F
+    RLCF    divH, F
+    RLCF    rem, F
+    MOVF    divsor, W
+    SUBWF   rem, W          ; C=1 if rem >= divsor
+    BTFSS   STATUS, C
+    GOTO    _no_sub
+    MOVF    divsor, W
+    SUBWF   rem, F
+    RLCF    quoL, F         ; shift in 1
+    RLCF    quoH, F
+    GOTO    _next
+_no_sub:
+    BCF     STATUS, C       ; shift in 0
+    RLCF    quoL, F
+    RLCF    quoH, F
+_next:
+    DECFSZ  cnt, F
+    GOTO    _loop
+ENDM
 
 ; --- 8x8 -> 16 multiply accumulate: acc += a*b (acc = aH:aL) ---
 MAC16_8x8 MACRO a,b, accL,accH
@@ -305,49 +367,143 @@ next:
     CLRF    cnt_dest
 ENDM
 
+;; 16-bit ÷ 16-bit (unsigned, restoring division)
+;; (dH:dL) / (vH:vL) → quoH:quoL, remainder in rH:rL
+;; cnt is a scratch loop counter (clobbered)
+;; Clobbers: WREG, STATUS (C/Z)
+;; Assumes operands live in access RAM when using ,ACCESS
 
+DIV16U16_UNSIGNED MACRO dH,dL, vH,vL, quoH,quoL, rH,rL, cnt
+    LOCAL _ok, _loop, _ge, _lt, _next, _done, _divzero
 
-; 16-bit ÷ 8-bit Unsigned (long division)
-; (divH:divL) / divsor  →  quoH:quoL, rem
-DIV16U8_LONG MACRO divH, divL, divsor, quoH, quoL, rem, cnt
-    LOCAL _loop, _no_sub, _next
+    ; init outputs
+    CLRF    quoH, ACCESS
+    CLRF    quoL, ACCESS
+    CLRF    rH,   ACCESS
+    CLRF    rL,   ACCESS
 
-    CLRF    quoH
-    CLRF    quoL
-    CLRF    rem
-    MOVLW   9
-    MOVWF   cnt
+    ; handle divisor == 0 (policy: quotient=FFFFh, remainder=dividend)
+    MOVF    vL, W, ACCESS
+    IORWF   vH, W, ACCESS
+    BNZ     _ok
+_divzero
+    MOVLW   0xFF
+    MOVWF   quoH, ACCESS
+    MOVWF   quoL, ACCESS
+    MOVF    dL, W, ACCESS
+    MOVWF   rL, ACCESS
+    MOVF    dH, W, ACCESS
+    MOVWF   rH, ACCESS
+    GOTO    _done
+
+_ok
+    MOVLW   d'16'
+    MOVWF   cnt, ACCESS
 
 _loop
-    ; --- shift dividend into remainder (MSB-first) ---
-    BCF     STATUS, C      ; << ensure 0 shifts into divL LSB
-    RLCF    divL, F
-    RLCF    divH, F
-    RLCF    rem, F         ; C now = old bit7 of rem (not used next)
+    ; shift dividend left; C ends up = old bit15 of dividend
+    BCF     STATUS, C
+    RLCF    dL, F, ACCESS
+    RLCF    dH, F, ACCESS
 
-    ; --- test rem >= divsor (unsigned) ---
-    MOVF    divsor, W
-    SUBWF   rem, W         ; C=1 if rem >= divsor
+    ; shift remainder left, bringing in that bit from C
+    RLCF    rL, F, ACCESS
+    RLCF    rH, F, ACCESS
+
+    ; compare (rH:rL) ? (vH:vL), leave r intact; final C=1 iff r>=v
+    MOVF    vL, W, ACCESS
+    SUBWF   rL, W, ACCESS           ; W = rL - vL, sets C
+    MOVF    vH, W, ACCESS
+    SUBWFB  rH, W, ACCESS           ; final C from full 16-bit compare
+
+    ; branch BEFORE touching C
     BTFSS   STATUS, C
-    GOTO    _no_sub
+    GOTO    _lt
 
-    ; rem >= divsor → subtract and shift '1' into quotient
-    MOVF    divsor, W
-    SUBWF   rem, F         ; leaves C=1 (no borrow)
-    RLCF    quoL, F        ; shift in C=1
-    RLCF    quoH, F
+_ge
+    ; C=1 → quotient bit = 1, then r -= v
+    RLCF    quoL, F, ACCESS
+    RLCF    quoH, F, ACCESS
+    MOVF    vL, W, ACCESS
+    SUBWF   rL, F, ACCESS
+    MOVF    vH, W, ACCESS
+    SUBWFB  rH, F, ACCESS
     GOTO    _next
 
-_no_sub
-    ; rem < divsor → shift '0' into quotient
-    BCF     STATUS, C      ; << be explicit: shift 0
-    RLCF    quoL, F
-    RLCF    quoH, F
+_lt
+    ; C=0 → quotient bit = 0 (no subtract)
+    RLCF    quoL, F, ACCESS
+    RLCF    quoH, F, ACCESS
 
 _next
-    DECFSZ  cnt, F
+    DECFSZ  cnt, F, ACCESS
     GOTO    _loop
+
+_done
 ENDM
+
+;;; Integer sqrt via Newton's method (unsigned 16-bit)
+;; Input : nH:nL = N
+;; In/Out: xH:xL = initial guess on entry; floor(sqrt(N)) on return
+;; Scratch: qH:qL (N/x), rH:rL (unused remainder), tH:tL (next x),
+;;          iter (outer loop cap), cnt_div (divider loop counter)
+SQRT16_NEWTON MACRO nH,nL, xH,xL, qH,qL, rH,rL, tH,tL, iter, cnt_div
+    LOCAL _seed_ok, _iter, _done
+
+    ; N==0 → x=0
+    MOVF    nL, W, ACCESS
+    IORWF   nH, W, ACCESS
+    BNZ     _seed_ok
+    CLRF    xL, ACCESS
+    CLRF    xH, ACCESS
+    GOTO    _done
+
+_seed_ok
+    ; ensure x != 0 (avoid div-by-zero)
+    MOVF    xL, W, ACCESS
+    IORWF   xH, W, ACCESS
+    BNZ     $+4
+    MOVFF   nL, xL
+    MOVFF   nH, xH
+
+    ; optional safety cap: ≤ 16 Newton steps
+    MOVLW   16
+    MOVWF   iter, ACCESS
+
+_iter
+    ; q = N / x
+    DIV16U16_UNSIGNED nH,nL, xH,xL, qH, qL, rH, rL, cnt_div
+
+    ; t = (x + q) >> 1
+    MOVFF   xL, tL
+    MOVF    qL, W, ACCESS
+    ADDWF   tL, F, ACCESS
+    MOVFF   xH, tH
+    MOVF    qH, W, ACCESS
+    ADDWFC  tH, F, ACCESS
+    RRCF    tH, F, ACCESS
+    RRCF    tL, F, ACCESS
+
+    ; stop if t == x
+    MOVF    tL, W, ACCESS
+    XORWF   xL, W, ACCESS
+    BNZ     $+6
+    MOVF    tH, W, ACCESS
+    XORWF   xH, W, ACCESS
+    BZ      _done
+
+    ; x = t
+    MOVFF   tL, xL
+    MOVFF   tH, xH
+
+    ; loop guard (separate from divider!)
+    DECFSZ  iter, F, ACCESS
+    GOTO    _iter
+
+_done
+ENDM
+
+
 
 ;; --- Template for recursion ---
 ;RECUR_FUNC:
@@ -554,86 +710,94 @@ ENDM
 ; Comparators
 ; =========================================================
 
-; CMP16U  aL,aH, bL,bH
-; Effect: computes (a - b) into W (throwaway) to set flags.
-; Flags:  Z=1 → a==b
-;         C=1 → a>=b   (no borrow)
-;         C=0 → a<b
+;---------------------------------------------------------
+; CMP16U  — set flags for unsigned a ? b
+;   Input: aL,aH, bL,bH
+;   Effect: final C = 1 iff a >= b ; final C = 0 iff a < b
+;           (Do NOT trust Z for equality)
+;---------------------------------------------------------
 CMP16U MACRO aL,aH, bL,bH
-    LOCAL _c1
-    MOVF    bL, W
-    SUBWF   aL, W         ; W = aL - bL   (sets C/Z)
-_c1 MOVF    bH, W
-    SUBWFB  aH, W         ; W = aH - bH - !C
+    MOVF    bL, W, ACCESS
+    SUBWF   aL, W, ACCESS       ; W = aL - bL, sets C/Z for low
+    MOVF    bH, W, ACCESS
+    SUBWFB  aH, W, ACCESS       ; W = aH - bH - !C ; final C is correct for 16-bit
 ENDM
 
-; Use immediately after CMP16U
-BR_EQ16   MACRO label     ; a == b
-    BTFSC   STATUS, Z
+;---------------------------------------------------------
+; BR_LT16U label   — branch if a <  b   (unsigned)
+; BR_GE16U label   — branch if a >= b   (unsigned)
+;   Uses only C from the prior CMP16U
+;---------------------------------------------------------
+BR_LT16U MACRO label
+    BTFSS   STATUS, C           ; C=0 ⇒ a<b
     GOTO    label
 ENDM
 
-BR_NE16   MACRO label     ; a != b
-    BTFSS   STATUS, Z
+BR_GE16U MACRO label
+    BTFSC   STATUS, C           ; C=1 ⇒ a>=b
     GOTO    label
 ENDM
 
-BR_LT16U  MACRO label     ; a < b  (unsigned)
-    BTFSS   STATUS, C     ; C=0 => borrow => a<b
-    GOTO    label
+;---------------------------------------------------------
+; BR_EQ16U  aL,aH,bL,bH,label   — branch if a == b
+; BR_NE16U  aL,aH,bL,bH,label   — branch if a != b
+;   Uses CPFSEQ (does not touch STATUS) to test equality.
+;   Safe to call after CMP16U (doesn't clobber C).
+;---------------------------------------------------------
+BR_EQ16U MACRO aL,aH, bL,bH, label
+    LOCAL _neq,_end
+    MOVF    aL, W, ACCESS
+    CPFSEQ  bL, ACCESS          ; skip next if equal
+    GOTO    _neq
+    MOVF    aH, W, ACCESS
+    CPFSEQ  bH, ACCESS
+    GOTO    _neq
+    GOTO    label               ; both bytes equal
+_neq:
+_end:
 ENDM
 
-BR_GE16U  MACRO label     ; a >= b (unsigned)
-    BTFSC   STATUS, C
+BR_NE16U MACRO aL,aH, bL,bH, label
+    LOCAL _ne,_end
+    MOVF    aL, W, ACCESS
+    CPFSEQ  bL, ACCESS
+    GOTO    _ne                 ; low differs
+    MOVF    aH, W, ACCESS
+    CPFSEQ  bH, ACCESS
+    GOTO    _ne                 ; high differs
+    GOTO    _end                ; equal → do not branch
+_ne:
     GOTO    label
+_end:
 ENDM
 
-BR_GT16U  MACRO label     ; a > b (unsigned)
-    ; (a>=b) && (a!=b)
-    BTFSC   STATUS, C
-    BTFSS   STATUS, Z
+;---------------------------------------------------------
+; BR_GT16U  aL,aH,bL,bH,label   — branch if a > b
+;   Logic: (a>=b) AND (a!=b) without trusting Z.
+;   Keeps C from CMP16U and checks inequality via CPFSEQ.
+;---------------------------------------------------------
+BR_GT16U MACRO aL,aH, bL,bH, label
+    LOCAL _maybe,_end,_ne
+    ; need a>=b first
+    BTFSC   STATUS, C           ; C=1 ⇒ a>=b
+    GOTO    _maybe
+    GOTO    _end                ; a<b → no branch
+
+_maybe:
+    ; if a != b, then a>b (since we already know a>=b)
+    MOVF    aL, W, ACCESS
+    CPFSEQ  bL, ACCESS
+    GOTO    _ne
+    MOVF    aH, W, ACCESS
+    CPFSEQ  bH, ACCESS
+    GOTO    _ne                ; equal → not greater
+
+    GOTO _end
+_ne:
     GOTO    label
+_end:
 ENDM
 
-BR_LE16U  MACRO label     ; a <= b (unsigned)
-    ; !(a>b)  →  (C==0) || (Z==1)
-    BTFSS   STATUS, C
-    GOTO    label
-    BTFSC   STATUS, Z
-    GOTO    label
-ENDM
-
-; BR_LT16S aL,aH,bL,bH,label   → branch if (a < b) signed
-BR_LT16S MACRO aL,aH,bL,bH,label
-    LOCAL _after
-    CMP16U  aL,aH, bL,bH
-    BTFSC   STATUS, Z         ; equal → not less
-    GOTO    _after
-    ; test N XOR OV
-    BTFSC   STATUS, 4         ; N
-    BTFSS   STATUS, 3         ; OV
-    GOTO    label             ; N=1,OV=0 → less
-    BTFSS   STATUS, 4
-    BTFSC   STATUS, 3
-    GOTO    label             ; N=0,OV=1 → less
-_after
-ENDM
-
-; BR_GE16S  → branch if (a >= b) signed
-BR_GE16S MACRO aL,aH,bL,bH,label
-    LOCAL _after
-    CMP16U  aL,aH, bL,bH
-    BTFSC   STATUS, Z
-    GOTO    label             ; equal → ge
-    ; !(N XOR OV) → ge
-    BTFSS   STATUS, 4
-    BTFSS   STATUS, 3
-    GOTO    label             ; N=0,OV=0
-    BTFSC   STATUS, 4
-    BTFSC   STATUS, 3
-    GOTO    label             ; N=1,OV=1
-_after
-ENDM
 
 ; =================== sample usage ===================
 ; ; Compare A(0x31:0x30) with B(0x33:0x32)

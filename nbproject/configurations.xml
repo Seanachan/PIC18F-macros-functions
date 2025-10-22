@@ -17,10 +17,7 @@
       <itemPath>fact_range32.asm</itemPath>
       <itemPath>16_16bit_divide.asm</itemPath>
       <itemPath>comb_rec.asm</itemPath>
-      <itemPath>2c.asm</itemPath>
       <itemPath>3a.asm</itemPath>
-      <itemPath>2a.asm</itemPath>
-      <itemPath>2b.asm</itemPath>
       <itemPath>toolbelt.asm</itemPath>
       <itemPath>find_y_y+1_x.asm</itemPath>
       <itemPath>long_division_CRC16bit_checksum.asm</itemPath>
@@ -31,6 +28,11 @@
       <itemPath>bubble_sort.asm</itemPath>
       <itemPath>qsort_partition.asm</itemPath>
       <itemPath>playground.asm</itemPath>
+      <itemPath>lab2_adv_merge_ascendingly.asm</itemPath>
+      <itemPath>lab3_adv_16bit_subtractor.asm</itemPath>
+      <itemPath>lab4_unsigned_16bit_div.asm</itemPath>
+      <itemPath>lab5_count_primes.asm</itemPath>
+      <itemPath>prime_test.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -90,30 +92,6 @@
         </mpasmsuite>
       </item>
       <item path="16_8bit_divide.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="2a.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="2b.asm" ex="true" overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="2c.asm" ex="true" overriding="false">
         <MPASMWIN-AS>
         </MPASMWIN-AS>
         <MPASMWIN-LD>
@@ -616,6 +594,12 @@
         <mpasmsuite>
         </mpasmsuite>
       </item>
+      <item path="lab2_adv_merge_ascendingly.asm" ex="true" overriding="false">
+      </item>
+      <item path="lab3_adv_16bit_subtractor.asm" ex="true" overriding="false">
+      </item>
+      <item path="lab4_unsigned_16bit_div.asm" ex="true" overriding="false">
+      </item>
       <item path="long_division_CRC16bit_checksum.asm" ex="true" overriding="false">
         <MPASMWIN-AS>
         </MPASMWIN-AS>
@@ -638,6 +622,10 @@
         </MPASMWIN-LD>
         <mpasmsuite>
         </mpasmsuite>
+      </item>
+      <item path="playground.asm" ex="true" overriding="false">
+      </item>
+      <item path="prime_test.asm" ex="true" overriding="false">
       </item>
       <item path="qsort_partition.asm" ex="true" overriding="false">
         <MPASMWIN-AS>

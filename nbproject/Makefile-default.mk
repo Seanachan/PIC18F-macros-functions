@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=playground.asm
+SOURCEFILES_QUOTED_IF_SPACED=lab5_count_primes.asm
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/playground.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/playground.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/lab5_count_primes.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/lab5_count_primes.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/playground.o
+OBJECTFILES=${OBJECTDIR}/lab5_count_primes.o
 
 # Source Files
-SOURCEFILES=playground.asm
+SOURCEFILES=lab5_count_primes.asm
 
 
 CFLAGS=
@@ -94,22 +94,22 @@ MP_LINKER_DEBUG_OPTION=
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: assemble
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/playground.o: playground.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/lab5_count_primes.o: lab5_count_primes.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/playground.o.d 
-	@${RM} ${OBJECTDIR}/playground.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/playground.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_SIMULATOR=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/playground.lst\" -e\"${OBJECTDIR}/playground.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/playground.o\" \"playground.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/playground.o"
-	@${FIXDEPS} "${OBJECTDIR}/playground.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} ${OBJECTDIR}/lab5_count_primes.o.d 
+	@${RM} ${OBJECTDIR}/lab5_count_primes.o 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/lab5_count_primes.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_SIMULATOR=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/lab5_count_primes.lst\" -e\"${OBJECTDIR}/lab5_count_primes.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/lab5_count_primes.o\" \"lab5_count_primes.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/lab5_count_primes.o"
+	@${FIXDEPS} "${OBJECTDIR}/lab5_count_primes.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 else
-${OBJECTDIR}/playground.o: playground.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/lab5_count_primes.o: lab5_count_primes.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/playground.o.d 
-	@${RM} ${OBJECTDIR}/playground.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/playground.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/playground.lst\" -e\"${OBJECTDIR}/playground.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/playground.o\" \"playground.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/playground.o"
-	@${FIXDEPS} "${OBJECTDIR}/playground.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} ${OBJECTDIR}/lab5_count_primes.o.d 
+	@${RM} ${OBJECTDIR}/lab5_count_primes.o 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/lab5_count_primes.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/lab5_count_primes.lst\" -e\"${OBJECTDIR}/lab5_count_primes.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/lab5_count_primes.o\" \"lab5_count_primes.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/lab5_count_primes.o"
+	@${FIXDEPS} "${OBJECTDIR}/lab5_count_primes.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 endif
 
