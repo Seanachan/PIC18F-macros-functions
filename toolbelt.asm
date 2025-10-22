@@ -100,6 +100,122 @@ ASR16    MACRO xL,xH            ; arithmetic >>1
         RRCF    xH,F
         RRCF    xL,F
         ENDM
+; ======= Equates (assumed) =======
+; nL/nH: dividend, dL/dH: divisor
+; quoL/quoH: quotient, rL/rH: remainder
+; cnt: scratch for DIV16U16_UNSIGNED
+; cnt_tmp: scratch for sign bookkeeping
+
+; Helper: NEG16 in-place (two's complement)
+;   Args:  lo, hi (registers)
+NEG16    MACRO lo, hi
+    COMF    lo, F, ACCESS
+    COMF    hi, F, ACCESS
+    INCF    lo, F, ACCESS
+    BTFSC   STATUS, Z
+    INCF    hi, F, ACCESS
+    ENDM
+
+; Helper: ABS16 in-place (two's complement if negative)
+;   Sets Z if result == 0, preserves sign in C? (not relied upon)
+;   Args: lo, hi
+ABS16    MACRO lo, hi
+    BTFSS   hi, 7, ACCESS      ; if negative?
+    GOTO    $+3
+    NEG16   lo, hi
+    NOP                         ; align (optional)
+    ENDM
+
+; ======= DIV16S16_SIGNED subroutine =======
+; Input : nH:nL (dividend), dH:dL (divisor), unsigned macro available
+; Output: quoH:quoL (signed quotient), rH:rL (signed remainder)
+; Clobbers: W, STATUS, PRODH/PRODL (via macro), cnt, cnt_tmp
+; Behavior:
+;   - If divisor == 0: quotient=0, remainder=0 (graceful return)
+;   - If dividend = 0x8000 and divisor = 0xFFFF: sets quotient=0x7FFF, remainder=0  ; (saturate)
+;       (Change to 0x8000 if you prefer wraparound?see comment below)
+DIV16S16_SIGNED:
+    ; Clear outputs by default (useful for div-by-zero path)
+    CLRF    quoL, ACCESS
+    CLRF    quoH, ACCESS
+    CLRF    rL,  ACCESS
+    CLRF    rH,  ACCESS
+
+    ; --- Check divisor == 0 ? return (quo=0, rem=0) ---
+    MOVF    dH, W, ACCESS
+    IORWF   dL, W, ACCESS
+    BZ      _sdone
+
+    ; --- Save sign info into cnt_tmp bits ---
+    ; cnt_tmp bit0 = sign(dividend), bit1 = sign(divisor), bit2 = sign(quotient) = XOR
+    CLRF    cnt_tmp, ACCESS
+    BTFSC   nH, 7, ACCESS
+    BSF     cnt_tmp, 0, ACCESS      ; sN
+    BTFSC   dH, 7, ACCESS
+    BSF     cnt_tmp, 1, ACCESS      ; sD
+    ; sQ = sN XOR sD ? bit2
+    BTFSC   cnt_tmp, 0, ACCESS
+    BTG     cnt_tmp, 2, ACCESS
+    BTFSC   cnt_tmp, 1, ACCESS
+    BTG     cnt_tmp, 2, ACCESS
+
+    ; --- Overflow guard: (-32768) / (-1) ---
+    ; n == 0x8000 and d == 0xFFFF ?
+    MOVLW   0x80
+    CPFSEQ  nH, ACCESS
+    GOTO    _skip_OVF
+    MOVF    nL, W, ACCESS
+    BNZ     _skip_OVF
+    MOVLW   0xFF
+    CPFSEQ  dH, ACCESS
+    GOTO    _skip_OVF
+    MOVF    dL, W, ACCESS
+    BNZ     _skip_OVF
+
+    ; Saturate: quotient = +32767 (0x7FFF), remainder = 0
+    MOVLW   0xFF
+    MOVWF   quoL, ACCESS
+    MOVLW   0x7F
+    MOVWF   quoH, ACCESS
+    CLRF    rL, ACCESS
+    CLRF    rH, ACCESS
+    GOTO    _sdone
+_skip_OVF:
+
+    ; --- Take absolute values for unsigned divide ---
+    ; abs(dividend) in-place
+    BTFSS   cnt_tmp, 0, ACCESS      ; if dividend was negative
+    GOTO    $+3
+    NEG16   nL, nH
+    NOP
+    ; abs(divisor) in-place
+    BTFSS   cnt_tmp, 1, ACCESS      ; if divisor was negative
+    GOTO    $+3
+    NEG16   dL, dH
+    NOP
+
+    ; --- Unsigned divide: q = |n| / |d|, r = |n| % |d| ---
+    DIV16U16_UNSIGNED  nH, nL,  dH, dL,  quoH, quoL,  rH, rL,  cnt
+
+    ; --- Restore quotient sign: if sQ then negate quotient ---
+    BTFSS   cnt_tmp, 2, ACCESS
+    GOTO    _rem_sign
+    ; q = -q
+    ; (Two's complement even if zero; zero stays zero)
+    NEG16   quoL, quoH
+
+_rem_sign:
+    ; --- Restore remainder sign: same sign as original dividend (sN) ---
+    ; If r == 0, leave as 0 (signless). Otherwise, negate if sN=1.
+    MOVF    rH, W, ACCESS
+    IORWF   rL, W, ACCESS
+    BZ      _sdone
+    BTFSS   cnt_tmp, 0, ACCESS      ; if dividend negative
+    GOTO    _sdone
+    NEG16   rL, rH
+
+_sdone:
+    RETURN
 
 ; --- 16/8 unsigned division: (dH:dL)/div -> quoH:quoL, rem ---
 DIV16U8  MACRO dH,dL, div, quoH,quoL, rem, cnt
